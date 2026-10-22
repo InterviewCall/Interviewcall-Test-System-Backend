@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 import { PrismaClient } from '../src/generated/prisma/client.js';
-import { UserStatus, UserType } from '../src/generated/prisma/enums.js';
+import { UserStatus, UserRole } from '../src/generated/prisma/enums.js';
 
 function requireEnv(name: string): string {
     const value = process.env[name];
@@ -52,7 +52,7 @@ async function seedAdmin(prisma: PrismaClient): Promise<void> {
             data: {
                 fullName,
                 phone,
-                userType: UserType.ADMIN,
+                role: UserRole.ADMIN,
                 status: UserStatus.ACTIVE,
             },
         });
@@ -71,7 +71,7 @@ async function seedAdmin(prisma: PrismaClient): Promise<void> {
             email,
             phone,
             passwordHash,
-            userType: UserType.ADMIN,
+            role: UserRole.ADMIN,
             status: UserStatus.ACTIVE,
         },
     });
