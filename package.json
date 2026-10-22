@@ -29,13 +29,18 @@
     "@nestjs/common": "^12.2.0",
     "@nestjs/core": "^12.2.0",
     "@nestjs/platform-express": "^12.2.0",
+    "@nestjs/swagger": "^12.0.3",
+    "@nestjs/throttler": "^6.7.1",
     "@prisma/adapter-mariadb": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "bcrypt": "^6.0.0",
+    "argon2": "^0.45.1",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
+    "helmet": "^8.3.0",
     "mariadb": "^3.5.4",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
@@ -43,7 +48,8 @@
     "@nestjs/schematics": "^12.0.0",
     "@nestjs/testing": "^12.2.0",
     "@rspack/core": "^2.2.2",
-    "@types/bcrypt": "^6.0.0",
+    "@swc/core": "^1.16.18",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
@@ -56,6 +62,7 @@
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "tsx": "^4.23.13",
     "typescript": "^6.0.2",
+    "unplugin-swc": "^2.0.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.1.2",
     "webpack-node-externals": "^3.0.0"
@@ -73,7 +80,6 @@
     "fsevents@2.3.3": true,
     "prisma@7.10.0": true,
     "@prisma/engines@7.10.0": true,
-    "bcrypt@6.0.0": true,
     "simple-git-hooks@2.14.0": true,
     "esbuild@0.28.2": true
   }

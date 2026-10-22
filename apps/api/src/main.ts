@@ -1,9 +1,15 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ApiModule } from './api.module.js';
+import { configureApp, setupSwagger } from './app.setup.js';
+import { loadConfig } from './config/app.config.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(ApiModule);
-  await app.listen(process.env.PORT ?? 3000);
+  const config = loadConfig();
+  const app = await NestFactory.create<NestExpressApplication>(ApiModule);
+  configureApp(app, config);
+  setupSwagger(app, config);
+  await app.listen(config.port);
 }
 await bootstrap();

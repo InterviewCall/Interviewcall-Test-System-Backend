@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import bcrypt from 'bcrypt';
+import argon2 from 'argon2';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 import { PrismaClient } from '../src/generated/prisma/client.js';
@@ -33,20 +33,29 @@ async function seedAdmin(prisma: PrismaClient): Promise<void> {
     const fullName = requireEnv('SEED_ADMIN_FULL_NAME').trim();
     const phone = requireEnv('SEED_ADMIN_PHONE').trim();
     const password = requireEnv('SEED_ADMIN_PASSWORD');
-    const saltRounds = Number(process.env.SALT_ROUNDS ?? 10);
 
-    if (!Number.isInteger(saltRounds) || saltRounds < 10 || saltRounds > 15) {
-        throw new Error(
-            `SALT_ROUNDS must be an integer between 10 and 15, got: ${process.env.SALT_ROUNDS}`,
-        );
+    if (password.length < 10 || password.length > 128) {
+        throw new Error('SEED_ADMIN_PASSWORD must be between 10 and 128 characters');
     }
+
+    // Same parameters as PasswordService in apps/api, so the admin signs in like anyone else.
+    const hashPassword = () =>
+        argon2.hash(password, {
+            type: argon2.argon2id,
+            memoryCost: 19_456,
+            timeCost: 2,
+            parallelism: 1,
+        });
 
     const existing = await prisma.user.findUnique({ where: { email } });
 
     if (existing) {
         // The account is already there. Its profile fields are refreshed from the
-        // environment, but passwordHash is deliberately left alone so that re-running
-        // the seed can never silently reset a password that was rotated since.
+        // environment, but a password that was rotated since is never overwritten.
+        // The one exception is a pre-argon2 (bcrypt) hash, which the API can no longer
+        // verify: that one is replaced with SEED_ADMIN_PASSWORD so the admin can sign in.
+        const legacyHash = !existing.passwordHash.startsWith('$argon2');
+
         const updated = await prisma.user.update({
             where: { email },
             data: {
@@ -54,16 +63,19 @@ async function seedAdmin(prisma: PrismaClient): Promise<void> {
                 phone,
                 role: UserRole.ADMIN,
                 status: UserStatus.ACTIVE,
+                ...(legacyHash && { passwordHash: await hashPassword() }),
             },
         });
 
         console.log(
-            `Admin already present, profile refreshed (password untouched): ${updated.email} [id=${updated.id}]`,
+            `Admin already present, profile refreshed (${
+                legacyHash ? 'legacy password hash replaced with SEED_ADMIN_PASSWORD' : 'password untouched'
+            }): ${updated.email} [id=${updated.id}]`,
         );
         return;
     }
 
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const passwordHash = await hashPassword();
 
     const created = await prisma.user.create({
         data: {
