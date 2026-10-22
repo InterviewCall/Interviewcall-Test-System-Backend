@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
-import { WorkerController } from './worker.controller.js';
-import { WorkerService } from './worker.service.js';
+import { NotificationsWorkerModule } from '@app/notifications/worker';
 
+/** Background jobs. Today that is sending queued emails and WhatsApp messages. */
 @Module({
-  imports: [],
-  controllers: [WorkerController],
-  providers: [WorkerService],
+    imports: [NotificationsWorkerModule],
 })
 export class WorkerModule {}

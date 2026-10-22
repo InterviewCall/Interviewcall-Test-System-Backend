@@ -21,6 +21,8 @@
     "paths": {
       "@app/model": ["./libs/model/src/index.js"],
       "@app/model/*": ["./libs/model/src/*"],
+      "@app/notifications": ["./libs/notifications/src/index.js"],
+      "@app/notifications/*": ["./libs/notifications/src/*.js"],
       "@app/prisma": ["./libs/model/src/generated/prisma/client.js"],
       "@app/prisma/*": ["./libs/model/src/generated/prisma/*"]
     }

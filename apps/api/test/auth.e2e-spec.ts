@@ -7,9 +7,11 @@ import { ModelService } from '@app/model';
 import { UserRole, UserStatus } from '@app/prisma';
 import { ApiModule } from '../src/api.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { NotificationsModule } from '@app/notifications';
 import { loadConfig } from '../src/config/app.config.js';
 import { createFakeModel } from './support/fake-model.js';
 import type { FakeModel } from './support/fake-model.js';
+import { FakeNotificationsModule, fakeNotifications } from './support/fake-notifications.js';
 
 const ORIGIN = 'http://localhost:3100';
 const PASSWORD = 'correct horse battery';
@@ -38,7 +40,9 @@ async function buildApp(db: FakeModel, { throttle }: { throttle: boolean }) {
     process.env.COOKIE_SECURE = 'false';
     const builder = Test.createTestingModule({ imports: [ApiModule] })
         .overrideProvider(ModelService)
-        .useValue(db);
+        .useValue(db)
+        .overrideModule(NotificationsModule)
+        .useModule(FakeNotificationsModule);
     if (!throttle) builder.overrideGuard(ThrottlerGuard).useValue({ canActivate: () => true });
     const moduleRef = await builder.compile();
     const app = moduleRef.createNestApplication<NestExpressApplication>();
@@ -64,6 +68,8 @@ describe('auth and users (no throttling)', () => {
     let db: FakeModel;
 
     beforeEach(async () => {
+        fakeNotifications.staffEmails = [];
+        fakeNotifications.queueIsUp = true;
         db = createFakeModel();
         app = await buildApp(db, { throttle: false });
     });
@@ -211,6 +217,16 @@ describe('auth and users (no throttling)', () => {
         expect(created.body.user).toMatchObject({ email: 'asha@example.com', role: 'ADVISOR', status: 'UNACTIVATED' });
         expect(created.body.temporaryPassword).toHaveLength(16);
         expect(JSON.stringify(created.body)).not.toContain('passwordHash');
+        expect(created.body.emailQueued).toBe(true);
+        expect(fakeNotifications.staffEmails).toEqual([
+            {
+                fullName: 'Asha Rao',
+                email: 'asha@example.com',
+                role: 'ADVISOR',
+                temporaryPassword: created.body.temporaryPassword,
+                reason: 'created',
+            },
+        ]);
 
         await admin.agent
             .post(api('/users'))
@@ -287,6 +303,28 @@ describe('auth and users (no throttling)', () => {
         expect((await login(app, 'advisor@example.com')).res.status).toBe(401);
         const again = await login(app, 'advisor@example.com', reset.body.temporaryPassword);
         expect(again.res.body.status).toBe('UNACTIVATED');
+        expect(reset.body.emailQueued).toBe(true);
+        expect(fakeNotifications.staffEmails.at(-1)).toMatchObject({
+            email: 'advisor@example.com',
+            reason: 'reset',
+            temporaryPassword: reset.body.temporaryPassword,
+        });
+    });
+
+    it('emails reactivated users, and says so when the email could not be queued', async () => {
+        await seedUser(db);
+        const advisorRow = await seedUser(db, { email: 'advisor@example.com', role: UserRole.ADVISOR });
+        const admin = await login(app, 'admin@example.com');
+        await admin.agent.post(api(`/users/${advisorRow.id}/deactivate`)).expect(200);
+
+        const back = await admin.agent.post(api(`/users/${advisorRow.id}/reactivate`)).expect(200);
+        expect(back.body.emailQueued).toBe(true);
+        expect(fakeNotifications.staffEmails.at(-1)).toMatchObject({ reason: 'reactivated' });
+
+        fakeNotifications.queueIsUp = false;
+        const reset = await admin.agent.post(api(`/users/${advisorRow.id}/reset-password`)).expect(200);
+        expect(reset.body.emailQueued).toBe(false);
+        expect(reset.body.temporaryPassword).toHaveLength(16); // the admin can still pass it on
     });
 
     it('refuses state-changing requests from an unknown origin', async () => {

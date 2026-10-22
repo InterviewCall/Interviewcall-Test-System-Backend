@@ -44,6 +44,8 @@ export interface UserFilter {
 export interface UserWithTemporaryPassword {
     user: UserRecord;
     temporaryPassword: string;
+    /** Whether the sign-in email was queued. False means the admin must pass the password on. */
+    emailQueued: boolean;
 }
 
 /** The public shape of a user in API responses. */
@@ -52,4 +54,5 @@ export type UserResponse = UserRecord;
 export interface UserWithTemporaryPasswordResponse {
     user: UserResponse;
     temporaryPassword: string;
+    emailQueued: boolean;
 }

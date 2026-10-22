@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{title}}</title>
+</head>
+<body style="margin:0;padding:0;background:#eef1f5;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#eef1f5;">{{preheader}}</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef1f5;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;">
+        <tr>
+          <td style="padding:0 4px 16px;font-family:Helvetica,Arial,sans-serif;font-size:18px;font-weight:700;color:#14213d;">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:6px;background:#ffd84d;border:2px solid #14213d;vertical-align:-1px;margin-right:8px;"></span>{{appName}}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff;border:1px solid #d6dce6;border-radius:12px;padding:32px 28px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#14213d;">
+            {{> @partial-block}}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 4px 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#67758c;">
+            Sent by {{appName}} because an admin set up an account for this email address. Replies to this message are not monitored.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

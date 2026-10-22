@@ -21,7 +21,14 @@
       "entryFile": "main",
       "sourceRoot": "apps/worker/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/worker/tsconfig.app.json"
+        "tsConfigPath": "apps/worker/tsconfig.app.json",
+        "assets": [
+          {
+            "include": "../../../libs/notifications/src/templates/**/*.hbs",
+            "outDir": "dist/apps/worker",
+            "watchAssets": true
+          }
+        ]
       }
     },
     "api": {
@@ -40,6 +47,15 @@
       "sourceRoot": "libs/model/src",
       "compilerOptions": {
         "tsConfigPath": "libs/model/tsconfig.lib.json"
+      }
+    },
+    "notifications": {
+      "type": "library",
+      "root": "libs/notifications",
+      "entryFile": "index",
+      "sourceRoot": "libs/notifications/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/notifications/tsconfig.lib.json"
       }
     }
   }

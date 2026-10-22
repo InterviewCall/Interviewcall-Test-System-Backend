@@ -1,0 +1,29 @@
+{{#> layout title=headline preheader=preheader}}
+<h1 style="margin:0 0 12px;font-size:22px;line-height:1.25;color:#14213d;">{{headline}}</h1>
+<p style="margin:0 0 20px;">Hi {{firstName}},</p>
+<p style="margin:0 0 24px;">{{intro}}</p>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;background:#f5f7fa;border:1px solid #d6dce6;border-radius:8px;">
+  <tr>
+    <td style="padding:16px 18px;">
+      <p style="margin:0;font-size:13px;color:#46556f;">Email</p>
+      <p style="margin:2px 0 14px;font-weight:600;">{{email}}</p>
+      <p style="margin:0;font-size:13px;color:#46556f;">Role</p>
+      <p style="margin:2px 0 14px;font-weight:600;">{{roleLabel}}</p>
+      <p style="margin:0;font-size:13px;color:#46556f;">Temporary password</p>
+      <p style="margin:4px 0 0;font-family:'SFMono-Regular',Menlo,Consolas,monospace;font-size:20px;font-weight:700;letter-spacing:0.5px;color:#14213d;">{{temporaryPassword}}</p>
+    </td>
+  </tr>
+</table>
+
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 24px;">
+  <tr>
+    <td style="border-radius:8px;background:#1d2f6f;">
+      <a href="{{signInUrl}}" style="display:inline-block;padding:12px 22px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">Sign in to the console</a>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 8px;font-size:13px;color:#46556f;">You'll be asked to replace this password when you first sign in. If the button doesn't work, open {{signInUrl}}.</p>
+<p style="margin:0;font-size:13px;color:#46556f;">Didn't expect this email? Ignore it and let an admin know.</p>
+{{/layout}}

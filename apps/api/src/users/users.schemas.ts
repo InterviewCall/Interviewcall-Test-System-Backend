@@ -50,4 +50,7 @@ export const userWithTemporaryPasswordResponseSchema = z.object({
     temporaryPassword: z
         .string()
         .describe('Shown once. The user must change it at first sign-in. Share it over a private channel.'),
+    emailQueued: z
+        .boolean()
+        .describe('True when the sign-in details were queued to the user by email. False: pass the password on yourself.'),
 });

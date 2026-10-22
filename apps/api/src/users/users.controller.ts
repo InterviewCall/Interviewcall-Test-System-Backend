@@ -46,8 +46,8 @@ export class UsersController {
         @Body(new ZodValidationPipe(createUserSchema)) dto: CreateUserInput,
         @CurrentUser() actor: AuthUser,
     ): Promise<UserWithTemporaryPasswordResponse> {
-        const { user, temporaryPassword } = await this.users.create(dto, actor);
-        return { user: toUserResponse(user), temporaryPassword };
+        const { user, temporaryPassword, emailQueued } = await this.users.create(dto, actor);
+        return { user: toUserResponse(user), temporaryPassword, emailQueued };
     }
 
     @Get()
@@ -98,8 +98,8 @@ export class UsersController {
         @Param('id', ParseIntPipe) id: number,
         @CurrentUser() actor: AuthUser,
     ): Promise<UserWithTemporaryPasswordResponse> {
-        const { user, temporaryPassword } = await this.users.reactivate(id, actor);
-        return { user: toUserResponse(user), temporaryPassword };
+        const { user, temporaryPassword, emailQueued } = await this.users.reactivate(id, actor);
+        return { user: toUserResponse(user), temporaryPassword, emailQueued };
     }
 
     @Post(':id/reset-password')
@@ -110,7 +110,7 @@ export class UsersController {
         @Param('id', ParseIntPipe) id: number,
         @CurrentUser() actor: AuthUser,
     ): Promise<UserWithTemporaryPasswordResponse> {
-        const { user, temporaryPassword } = await this.users.resetPassword(id, actor);
-        return { user: toUserResponse(user), temporaryPassword };
+        const { user, temporaryPassword, emailQueued } = await this.users.resetPassword(id, actor);
+        return { user: toUserResponse(user), temporaryPassword, emailQueued };
     }
 }
