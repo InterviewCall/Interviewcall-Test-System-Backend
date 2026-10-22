@@ -61,6 +61,29 @@ describe('MailProcessor', () => {
         expect(job.data.secure).toBeUndefined();
     });
 
+    it('sends a candidate email that has no secret part, from the candidates sender', async () => {
+        const { processor, send } = setup();
+        const job = fakeJob({
+            template: 'candidate-test-scheduled',
+            to: 'rohan@example.com',
+            params: {
+                fullName: 'Rohan Das',
+                startsAt: '2026-10-24T05:30:00.000Z',
+                endsAt: '2026-10-24T06:30:00.000Z',
+                durationMinutes: '22',
+            },
+        });
+
+        await processor.process(job);
+
+        const mail = send.mock.calls[0][0];
+        expect(mail.sender).toBe('candidates');
+        expect(mail.to).toBe('rohan@example.com');
+        expect(mail.text).toContain('approximately 22 minutes');
+        expect(mail.text).toContain('Scheduled: 24 October 2026, 11:00 AM – 12:00 PM IST');
+        expect(mail.text).toContain('https://www.test-portal.interviewcall.club');
+    });
+
     it('lets a retryable provider failure through so BullMQ tries again', async () => {
         const failure = new NotificationDeliveryError('throttled', true);
         const { processor } = setup(vi.fn().mockRejectedValue(failure));

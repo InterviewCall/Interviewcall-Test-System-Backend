@@ -27,6 +27,7 @@ const envSchema = z
 
         APP_NAME: z.string().min(1).default('InterviewCall'),
         STAFF_CONSOLE_URL: z.url().default('http://localhost:3000'),
+        TEST_PORTAL_URL: z.url().default('https://www.test-portal.interviewcall.club'),
 
         MAIL_DRIVER: z.enum(['ses', 'console']).optional(),
         MAIL_FROM_ACCOUNTS: z.string().min(3).optional(),
@@ -87,6 +88,7 @@ export function loadNotificationsConfig(env: Env = process.env): NotificationsCo
         payloadKey: Buffer.from(e.NOTIFICATIONS_PAYLOAD_KEY, 'base64'),
         appName: e.APP_NAME,
         staffConsoleUrl: e.STAFF_CONSOLE_URL.replace(/\/+$/, ''),
+        testPortalUrl: e.TEST_PORTAL_URL.replace(/\/+$/, ''),
         mail: {
             driver: e.MAIL_DRIVER ?? (production ? 'ses' : 'console'),
             from: { accounts: e.MAIL_FROM_ACCOUNTS, candidates: e.MAIL_FROM_CANDIDATES },

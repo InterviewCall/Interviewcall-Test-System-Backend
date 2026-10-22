@@ -8,6 +8,7 @@ import type {
     MailJobData,
     SendWhatsAppInput,
     StaffAccountReadyInput,
+    TestScheduledInput,
     WhatsAppJobData,
 } from './types/notification.types.js';
 import type { NotificationsConfig } from './types/notifications-config.types.js';
@@ -70,6 +71,40 @@ export class NotificationsService {
         } catch (error) {
             this.logger.error(
                 `Could not queue "staff-account-ready" for ${maskEmail(input.email)}: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            return false;
+        }
+    }
+
+    /** Emails a candidate their test slot. Nothing in it is secret, so the job carries no sealed part. */
+    sendTestScheduled(input: TestScheduledInput): Promise<boolean> {
+        return this.queueCandidateSlot('candidate-test-scheduled', input);
+    }
+
+    /** Tells a candidate their slot has moved, with the new time. Same data as the first email. */
+    sendTestRescheduled(input: TestScheduledInput): Promise<boolean> {
+        return this.queueCandidateSlot('candidate-test-rescheduled', input);
+    }
+
+    private async queueCandidateSlot(template: 'candidate-test-scheduled' | 'candidate-test-rescheduled', input: TestScheduledInput): Promise<boolean> {
+        const job: MailJobData = {
+            template,
+            to: input.email,
+            params: {
+                fullName: input.fullName,
+                startsAt: input.startsAt.toISOString(),
+                endsAt: input.endsAt.toISOString(),
+                durationMinutes: String(input.durationMinutes),
+            },
+        };
+
+        try {
+            await withinTimeout(this.mailQueue.add(SEND_MAIL_JOB, job));
+            this.logger.log(`Queued "${template}" for ${maskEmail(input.email)}`);
+            return true;
+        } catch (error) {
+            this.logger.error(
+                `Could not queue "${template}" for ${maskEmail(input.email)}: ${error instanceof Error ? error.message : String(error)}`,
             );
             return false;
         }

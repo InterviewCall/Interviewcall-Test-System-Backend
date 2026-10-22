@@ -51,6 +51,68 @@ describe('NotificationsService.sendStaffAccountReady', () => {
     });
 });
 
+describe('NotificationsService.sendTestScheduled', () => {
+    const slot = {
+        fullName: 'Rohan Das',
+        email: 'rohan@example.com',
+        startsAt: new Date('2026-10-24T05:30:00Z'),
+        endsAt: new Date('2026-10-24T06:30:00Z'),
+        durationMinutes: 12,
+    };
+
+    it('queues a plain job: params as strings, nothing sealed', async () => {
+        const { service, mailAdd } = setup();
+        await expect(service.sendTestScheduled(slot)).resolves.toBe(true);
+        expect(mailAdd).toHaveBeenCalledWith('send-mail', {
+            template: 'candidate-test-scheduled',
+            to: 'rohan@example.com',
+            params: {
+                fullName: 'Rohan Das',
+                startsAt: '2026-10-24T05:30:00.000Z',
+                endsAt: '2026-10-24T06:30:00.000Z',
+                durationMinutes: '12',
+            },
+        });
+    });
+
+    it('reports false when the queue is down', async () => {
+        const { service, mailAdd } = setup();
+        mailAdd.mockRejectedValue(new Error('down'));
+        await expect(service.sendTestScheduled(slot)).resolves.toBe(false);
+    });
+});
+
+describe('NotificationsService.sendTestRescheduled', () => {
+    const slot = {
+        fullName: 'Rohan Das',
+        email: 'rohan@example.com',
+        startsAt: new Date('2026-10-26T04:30:00Z'),
+        endsAt: new Date('2026-10-26T05:30:00Z'),
+        durationMinutes: 22,
+    };
+
+    it('queues the rescheduled template with the same plain params', async () => {
+        const { service, mailAdd } = setup();
+        await expect(service.sendTestRescheduled(slot)).resolves.toBe(true);
+        expect(mailAdd).toHaveBeenCalledWith('send-mail', {
+            template: 'candidate-test-rescheduled',
+            to: 'rohan@example.com',
+            params: {
+                fullName: 'Rohan Das',
+                startsAt: '2026-10-26T04:30:00.000Z',
+                endsAt: '2026-10-26T05:30:00.000Z',
+                durationMinutes: '22',
+            },
+        });
+    });
+
+    it('reports false when the queue is down', async () => {
+        const { service, mailAdd } = setup();
+        mailAdd.mockRejectedValue(new Error('down'));
+        await expect(service.sendTestRescheduled(slot)).resolves.toBe(false);
+    });
+});
+
 describe('when Redis never answers', () => {
     afterEach(() => vi.useRealTimers());
 

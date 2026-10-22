@@ -1,5 +1,5 @@
 /** Every email we can send. Add the id here, then add its three template files. */
-export const MAIL_TEMPLATE_IDS = ['staff-account-ready'] as const;
+export const MAIL_TEMPLATE_IDS = ['staff-account-ready', 'candidate-test-scheduled', 'candidate-test-rescheduled'] as const;
 export type MailTemplateId = (typeof MAIL_TEMPLATE_IDS)[number];
 
 /**
@@ -16,6 +16,7 @@ export type StaffAccountReason = 'created' | 'reset' | 'reactivated';
 export interface MailGlobals {
     appName: string;
     staffConsoleUrl: string;
+    testPortalUrl: string;
     year: number;
 }
 

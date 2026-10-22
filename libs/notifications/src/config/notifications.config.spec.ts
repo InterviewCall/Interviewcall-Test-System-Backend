@@ -58,4 +58,13 @@ describe('loadNotificationsConfig', () => {
             'https://console.example.com',
         );
     });
+
+    it('defaults the test portal link, and drops a trailing slash from a custom one', () => {
+        const env = { NOTIFICATIONS_PAYLOAD_KEY: KEY };
+        expect(loadNotificationsConfig(env).testPortalUrl).toBe('https://www.test-portal.interviewcall.club');
+        expect(loadNotificationsConfig({ ...env, TEST_PORTAL_URL: 'https://t.example.com/' }).testPortalUrl).toBe(
+            'https://t.example.com',
+        );
+        expect(() => loadNotificationsConfig({ ...env, TEST_PORTAL_URL: 'nope' })).toThrow(/TEST_PORTAL_URL/);
+    });
 });

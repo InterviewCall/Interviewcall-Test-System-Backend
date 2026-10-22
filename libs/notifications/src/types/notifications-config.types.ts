@@ -18,6 +18,8 @@ export interface NotificationsConfig {
     appName: string;
     /** Where staff sign in. Linked from the account emails. */
     staffConsoleUrl: string;
+    /** Where candidates take their test. Linked from the test-scheduled email. */
+    testPortalUrl: string;
     mail: {
         driver: MailDriver;
         /** e.g. `InterviewCall <no-reply@notification.interviewcall.club>`. Each must be an SES-verified identity. */

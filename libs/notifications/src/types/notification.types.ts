@@ -22,6 +22,16 @@ export interface StaffAccountReadyInput {
     reason: StaffAccountReason;
 }
 
+export interface TestScheduledInput {
+    fullName: string;
+    email: string;
+    /** The window in which the candidate may start the test. */
+    startsAt: Date;
+    endsAt: Date;
+    /** How long the test takes once started. Depends on the level, so the caller supplies it. */
+    durationMinutes: number;
+}
+
 export interface SendWhatsAppInput {
     campaignName: string;
     /** As stored, e.g. "+91 70446 10338" or "7044610338". */

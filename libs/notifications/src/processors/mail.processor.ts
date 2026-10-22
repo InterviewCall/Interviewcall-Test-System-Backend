@@ -62,15 +62,17 @@ export class MailProcessor extends WorkerHost {
         const data = mailJobSchema.parse(raw);
         const template = MAIL_TEMPLATES[data.template];
         const secrets = data.secure ? this.cipher.decrypt(data.secure) : {};
-        const input = template.schema.parse({ ...data.params, ...secrets });
+        const input = { ...data.params, ...secrets };
 
         const globals: MailGlobals = {
             appName: this.config.appName,
             staffConsoleUrl: this.config.staffConsoleUrl,
+            testPortalUrl: this.config.testPortalUrl,
             year: new Date().getFullYear(),
         };
-        const { html, text } = this.templates.renderMail(data.template, template.view(input, globals));
-        return { sender: template.sender, to: data.to, subject: template.subject(input, globals), html, text };
+        const { sender, subject, view } = template.prepare(input, globals);
+        const { html, text } = this.templates.renderMail(data.template, view);
+        return { sender, to: data.to, subject, html, text };
     }
 
     @OnWorkerEvent('failed')

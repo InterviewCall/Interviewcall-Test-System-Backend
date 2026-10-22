@@ -43,7 +43,7 @@ async function until<T>(read: () => T | undefined, ms = 8000): Promise<T> {
 }
 
 describe.skipIf(!up)('notification queues (real Redis)', () => {
-    const sentMail: Array<{ to: string; subject: string; html: string; text: string }> = [];
+    const sentMail: Array<{ sender: string; to: string; subject: string; html: string; text: string }> = [];
     const sentWhatsApp: unknown[] = [];
     let mailFailures: Error[] = [];
     let producer: INestApplicationContext;
@@ -126,6 +126,25 @@ describe.skipIf(!up)('notification queues (real Redis)', () => {
         } finally {
             raw.disconnect();
         }
+    });
+
+    it('delivers a candidate test invitation from the candidates sender, with the right duration', async () => {
+        const before = sentMail.length;
+        mailFailures = [];
+        await service.sendTestScheduled({
+            fullName: 'Rohan Das',
+            email: 'rohan@example.com',
+            startsAt: new Date('2026-10-24T05:30:00Z'),
+            endsAt: new Date('2026-10-24T06:30:00Z'),
+            durationMinutes: 12,
+        });
+        const mail = await until(() => sentMail[before]);
+        expect(mail.sender).toBe('candidates');
+        expect(mail.to).toBe('rohan@example.com');
+        expect(mail.subject).toBe('Your InterviewCall readiness assessment');
+        expect(mail.text).toContain('It takes approximately 12 minutes.');
+        expect(mail.text).toContain('Scheduled: 24 October 2026, 11:00 AM – 12:00 PM IST');
+        expect(mail.html).toContain('href="https://www.test-portal.interviewcall.club"');
     });
 
     it('scrubs the encrypted secret once the email has gone', async () => {

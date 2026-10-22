@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { RolesGuard } from './auth/roles.guard.js';
 import { AppConfigModule } from './config/app.config.js';
 import { HealthModule } from './health/health.module.js';
+import { TestSchedulesModule } from './test-schedules/test-schedules.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module.js';
         ThrottlerModule.forRoot({ throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }] }),
         AuthModule,
         UsersModule,
+        TestSchedulesModule,
         HealthModule,
     ],
     providers: [

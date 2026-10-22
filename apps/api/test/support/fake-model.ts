@@ -17,7 +17,9 @@ function matches(row: Row, where: Row = {}): boolean {
         if (cond === null) return row[key] === null;
         if (cond && typeof cond === 'object' && !(cond instanceof Date)) {
             if ('gt' in cond) return row[key] > cond.gt;
-            if ('contains' in cond) return String(row[key]).includes(cond.contains);
+            if ('in' in cond) return (cond.in as unknown[]).includes(row[key]);
+            // MySQL's default collation ignores case, so the stand-in does too.
+            if ('contains' in cond) return String(row[key]).toLowerCase().includes(String(cond.contains).toLowerCase());
             return false;
         }
         return row[key] === cond;
@@ -100,15 +102,114 @@ export function createFakeModel() {
         },
     };
 
-    return {
+    const candidates: Row[] = [];
+    const schedules: Row[] = [];
+    let candidateSeq = 0;
+    let scheduleSeq = 0;
+
+    const uniqueViolation = () =>
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', { code: 'P2002', clientVersion: 'test' });
+
+    /** A schedule with its relations filled in the way the repository's select asks for. */
+    const withRelations = (row: Row, select?: Row): Row => {
+        const full: Row = {
+            ...row,
+            candidate: project(candidates.find((c) => c.id === row.candidateId)!, select?.candidate?.select),
+            invitedBy: project(users.find((u) => u.id === row.invitedById)!, select?.invitedBy?.select),
+        };
+        if (!select) return full;
+        const out: Row = {};
+        for (const [key, on] of Object.entries(select)) if (on) out[key] = full[key];
+        return out;
+    };
+
+    const scheduleMatches = (row: Row, where: Row = {}): boolean => {
+        const { candidate: candidateWhere, startsAt, endsAt, ...rest } = where;
+        if (!matches(row, rest)) return false;
+        if (startsAt) {
+            if (startsAt.gte && !(row.startsAt >= startsAt.gte)) return false;
+            if (startsAt.lte && !(row.startsAt <= startsAt.lte)) return false;
+        }
+        if (endsAt?.lte && !(row.endsAt <= endsAt.lte)) return false;
+        if (candidateWhere) return matches(candidates.find((c) => c.id === row.candidateId)!, candidateWhere);
+        return true;
+    };
+
+    const candidate = {
+        async findUnique({ where, select }: Row) {
+            const row = candidates.find((c) => c.email === where.email);
+            if (!row) return null;
+            const out = project(row, select)!;
+            if (select?.testSchedule) {
+                const booked = schedules.find((s) => s.candidateId === row.id);
+                out.testSchedule = booked ? project(booked, select.testSchedule.select) : null;
+            }
+            return out;
+        },
+        async create({ data, select }: Row) {
+            if (candidates.some((c) => c.email === data.email)) throw uniqueViolation();
+            const now = new Date();
+            const row = { id: ++candidateSeq, phone: null, createdAt: now, updatedAt: now, ...data };
+            candidates.push(row);
+            return project(row, select);
+        },
+    };
+
+    const testSchedule = {
+        async create({ data, select }: Row) {
+            if (schedules.some((s) => s.candidateId === data.candidateId)) throw uniqueViolation();
+            const now = new Date();
+            const row = {
+                id: ++scheduleSeq,
+                status: 'INVITED',
+                invitationQueuedAt: null,
+                createdAt: now,
+                updatedAt: now,
+                ...data,
+            };
+            schedules.push(row);
+            return withRelations(row, select);
+        },
+        async findUnique({ where, select }: Row) {
+            const row = schedules.find((s) => s.id === where.id);
+            return row ? withRelations(row, select) : null;
+        },
+        async update({ where, data, select }: Row) {
+            const row = schedules.find((s) => s.id === where.id)!;
+            Object.assign(row, data, { updatedAt: new Date() });
+            return withRelations(row, select);
+        },
+        async updateMany({ where, data }: Row) {
+            const rows = schedules.filter((s) => scheduleMatches(s, where));
+            rows.forEach((r) => Object.assign(r, data, { updatedAt: new Date() }));
+            return { count: rows.length };
+        },
+        async findMany({ where, select, skip = 0, take }: Row) {
+            const rows = schedules
+                .filter((s) => scheduleMatches(s, where))
+                .sort((a, b) => b.startsAt - a.startsAt || b.id - a.id);
+            return rows.slice(skip, take === undefined ? undefined : skip + take).map((r) => withRelations(r, select));
+        },
+        async count({ where }: Row) {
+            return schedules.filter((s) => scheduleMatches(s, where)).length;
+        },
+    };
+
+    const model = {
         user,
         session,
+        candidate,
+        testSchedule,
         $queryRaw: async () => [{ 1: 1 }],
-        $transaction: async (ops: Promise<unknown>[]) => Promise.all(ops),
+        $transaction: async (work: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) =>
+            typeof work === 'function' ? work(model) : Promise.all(work),
         // Test helpers
         _users: users,
         _sessions: sessions,
+        _candidates: candidates,
+        _schedules: schedules,
     };
+    return model;
 }
 
 export type FakeModel = ReturnType<typeof createFakeModel>;

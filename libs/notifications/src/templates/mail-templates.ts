@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { formatWindow } from '../utils/datetime.js';
 import type { MailGlobals, MailSender, MailTemplateId } from '../types/mail.types.js';
 
 interface MailTemplate<S extends z.ZodType> {
@@ -14,8 +15,26 @@ interface MailTemplate<S extends z.ZodType> {
     view: (data: z.infer<S>, globals: MailGlobals) => Record<string, unknown>;
 }
 
-function defineMailTemplate<S extends z.ZodType>(template: MailTemplate<S>): MailTemplate<S> {
-    return template;
+/** A template with its types erased, which is what the processor needs: it only ever has raw job data. */
+export interface PreparedMail {
+    sender: MailSender;
+    subject: string;
+    view: Record<string, unknown>;
+}
+
+type DefinedMailTemplate<S extends z.ZodType> = MailTemplate<S> & {
+    /** Checks the raw data against the schema, then builds the subject and the values the .hbs files print. Throws if it doesn't fit. */
+    prepare: (raw: unknown, globals: MailGlobals) => PreparedMail;
+};
+
+function defineMailTemplate<S extends z.ZodType>(template: MailTemplate<S>): DefinedMailTemplate<S> {
+    return {
+        ...template,
+        prepare: (raw, globals) => {
+            const data = template.schema.parse(raw);
+            return { sender: template.sender, subject: template.subject(data, globals), view: template.view(data, globals) };
+        },
+    };
 }
 
 const staffAccountReady = defineMailTemplate({
@@ -56,13 +75,54 @@ const staffAccountReady = defineMailTemplate({
             firstName: data.fullName.trim().split(/\s+/)[0],
             signInUrl: `${globals.staffConsoleUrl}/login`,
             preheader: `${copy.headline}. Your temporary password is inside.`,
+            footerNote: `Sent by ${globals.appName} because an admin set up an account for this email address. Replies to this message are not monitored.`,
         };
     },
+});
+
+/** The data both candidate emails carry: who, and the slot. Params travel through Redis as strings. */
+const candidateSlotSchema = z.object({
+    fullName: z.string().min(1),
+    startsAt: z.iso.datetime(),
+    endsAt: z.iso.datetime(),
+    durationMinutes: z.coerce.number().int().min(1).max(600),
+});
+
+const candidateTestScheduled = defineMailTemplate({
+    sender: 'candidates',
+    schema: candidateSlotSchema,
+    subject: (_data, { appName }) => `Your ${appName} readiness assessment`,
+    view: (data, globals) => ({
+        ...globals,
+        firstName: data.fullName.trim().split(/\s+/)[0],
+        durationMinutes: data.durationMinutes,
+        scheduledAt: formatWindow(new Date(data.startsAt), new Date(data.endsAt)),
+        testPortalUrl: globals.testPortalUrl,
+        preheader: `Your assessment takes about ${data.durationMinutes} minutes.`,
+        footerNote: `Sent by ${globals.appName} because our team scheduled an assessment for this email address.`,
+    }),
+});
+
+const candidateTestRescheduled = defineMailTemplate({
+    sender: 'candidates',
+    schema: candidateSlotSchema,
+    subject: (_data, { appName }) => `Your ${appName} readiness assessment has a new time`,
+    view: (data, globals) => ({
+        ...globals,
+        firstName: data.fullName.trim().split(/\s+/)[0],
+        durationMinutes: data.durationMinutes,
+        scheduledAt: formatWindow(new Date(data.startsAt), new Date(data.endsAt)),
+        testPortalUrl: globals.testPortalUrl,
+        preheader: 'Your assessment has moved. Here is your new time.',
+        footerNote: `Sent by ${globals.appName} because our team rescheduled an assessment for this email address.`,
+    }),
 });
 
 /** One entry per id in MAIL_TEMPLATE_IDS. The compiler enforces it. */
 export const MAIL_TEMPLATES = {
     'staff-account-ready': staffAccountReady,
-} satisfies Record<MailTemplateId, MailTemplate<z.ZodType>>;
+    'candidate-test-scheduled': candidateTestScheduled,
+    'candidate-test-rescheduled': candidateTestRescheduled,
+} satisfies Record<MailTemplateId, { sender: MailSender; prepare: (raw: unknown, globals: MailGlobals) => PreparedMail }>;
 
 export type StaffAccountReadyData = z.infer<typeof staffAccountReady.schema>;
