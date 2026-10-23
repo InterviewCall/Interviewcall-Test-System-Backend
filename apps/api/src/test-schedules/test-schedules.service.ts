@@ -1,6 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { NotificationsService } from '@app/notifications';
-import { TestStatus, UserRole } from '@app/prisma';
+import { TestStatus } from '@app/prisma';
+import { hashToken, newSecretToken } from '../candidate/invite-token.js';
+import { seesAllTests } from '../common/roles.js';
 import type { AuthUser } from '../common/types/authenticated-request.types.js';
 import type { Page } from '../common/types/pagination.types.js';
 import { latestStartAt, MINUTE_MS, TEST_DURATION_MINUTES } from './test-levels.js';
@@ -51,8 +54,8 @@ export class TestSchedulesService {
         await this.schedules.expireOverdue();
         const { items, total } = await this.schedules.findPage(
             {
-                // Advisors only ever see their own; admins see everyone's unless they narrow it.
-                invitedById: actor.role === UserRole.ADMIN ? query.invitedById : actor.id,
+                // Advisors only ever see their own; admins and managers see everyone's unless they narrow it.
+                invitedById: seesAllTests(actor.role) ? query.invitedById : actor.id,
                 status: query.status,
                 level: query.level,
                 q: query.q,
@@ -68,7 +71,7 @@ export class TestSchedulesService {
         await this.schedules.expireOverdue();
         const schedule = await this.schedules.findById(id);
         // An advisor asking for someone else's test gets the same answer as for a test that doesn't exist.
-        if (!schedule || (actor.role !== UserRole.ADMIN && schedule.invitedBy.id !== actor.id)) {
+        if (!schedule || (!seesAllTests(actor.role) && schedule.invitedBy.id !== actor.id)) {
             throw new NotFoundException('Test not found');
         }
         return schedule;
@@ -118,6 +121,12 @@ export class TestSchedulesService {
     }
 
     private async sendInvitation(schedule: ScheduleRecord, kind: 'scheduled' | 'rescheduled'): Promise<ScheduledWithEmailStatus> {
+        // A fresh secret for every email: the newest link is the only one that works.
+        const inviteToken = newSecretToken();
+        // Tags this email, so SES can tell us later whether it was delivered or bounced.
+        const mailRef = randomUUID();
+        await this.schedules.startInvitation(schedule.id, hashToken(inviteToken), mailRef);
+
         const send = kind === 'rescheduled' ? this.notifications.sendTestRescheduled : this.notifications.sendTestScheduled;
         const emailQueued = await send.call(this.notifications, {
             fullName: schedule.candidate.fullName,
@@ -125,11 +134,13 @@ export class TestSchedulesService {
             startsAt: schedule.startsAt,
             endsAt: schedule.endsAt,
             durationMinutes: schedule.durationMinutes,
+            inviteToken,
+            mailRef,
         });
-        if (!emailQueued) return { schedule, emailQueued };
+        if (!emailQueued) return { schedule: (await this.schedules.findById(schedule.id)) ?? schedule, emailQueued };
 
         try {
-            return { schedule: await this.schedules.markInvitationQueued(schedule.id, new Date()), emailQueued };
+            return { schedule: await this.schedules.markInvitationQueued(schedule.id, mailRef, new Date()), emailQueued };
         } catch (error) {
             // The email is already queued; only the bookkeeping failed. Say so rather than fail the request.
             this.logger.error(`Test ${schedule.id}: invitation queued but could not be recorded: ${String(error)}`);

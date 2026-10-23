@@ -14,6 +14,8 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
     // The Swagger UI needs inline scripts; the JSON API does not care about CSP.
     app.use(helmet({ contentSecurityPolicy: config.swaggerEnabled ? false : undefined }));
     app.use(cookieParser());
+    // SNS posts its JSON as text/plain, which Nest would otherwise leave unread.
+    app.useBodyParser('text', { type: 'text/plain', limit: '300kb' });
     app.use(originCheck(config.allowedOrigins));
 
     app.setGlobalPrefix(API_PREFIX);

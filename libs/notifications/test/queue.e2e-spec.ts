@@ -60,6 +60,7 @@ describe.skipIf(!up)('notification queues (real Redis)', () => {
             MAIL_DRIVER: 'console',
             WHATSAPP_DRIVER: 'console',
             STAFF_CONSOLE_URL: 'https://console.example.com',
+            TEST_PORTAL_URL: 'https://www.test-portal.interviewcall.club',
         });
 
         producer = await (await Test.createTestingModule({ imports: [NotificationsModule] }).compile())
@@ -137,14 +138,16 @@ describe.skipIf(!up)('notification queues (real Redis)', () => {
             startsAt: new Date('2026-10-24T05:30:00Z'),
             endsAt: new Date('2026-10-24T06:30:00Z'),
             durationMinutes: 12,
+            inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro',
         });
         const mail = await until(() => sentMail[before]);
         expect(mail.sender).toBe('candidates');
         expect(mail.to).toBe('rohan@example.com');
-        expect(mail.subject).toBe('Your InterviewCall readiness assessment');
+        expect(mail.subject).toBe('Your next InterviewCall step: 12-minute readiness assessment');
         expect(mail.text).toContain('It takes approximately 12 minutes.');
         expect(mail.text).toContain('Scheduled: 24 October 2026, 11:00 AM – 12:00 PM IST');
-        expect(mail.html).toContain('href="https://www.test-portal.interviewcall.club"');
+        expect(mail.html).toContain('href="https://www.test-portal.interviewcall.club/t/Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro"');
+        expect(mail.text).toContain('https://www.test-portal.interviewcall.club/t/Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro');
     });
 
     it('scrubs the encrypted secret once the email has gone', async () => {

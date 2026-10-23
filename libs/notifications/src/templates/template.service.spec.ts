@@ -84,6 +84,7 @@ describe('candidate-test-scheduled email', () => {
         startsAt: '2026-10-24T05:30:00.000Z',
         endsAt: '2026-10-24T06:30:00.000Z',
         durationMinutes: 22,
+        inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro',
     };
 
     function renderCandidate(overrides: Partial<typeof data> = {}) {
@@ -103,17 +104,21 @@ describe('candidate-test-scheduled email', () => {
         expect(MAIL_TEMPLATES['staff-account-ready'].sender).toBe('accounts');
     });
 
+    it('puts the test length in the subject, so a 12-minute test says 12', () => {
+        expect(renderCandidate({ durationMinutes: 12 }).subject).toBe('Your next InterviewCall step: 12-minute readiness assessment');
+    });
+
     it('fills in the name, duration, slot and portal link in both versions', () => {
         const { html, text, subject } = renderCandidate();
-        expect(subject).toBe('Your InterviewCall readiness assessment');
+        expect(subject).toBe('Your next InterviewCall step: 22-minute readiness assessment');
         for (const body of [html, text]) {
             expect(body).toContain('Hi Rohan,');
             expect(body).toContain('It takes approximately 22 minutes.');
             expect(body).toContain('Scheduled: 24 October 2026, 11:00 AM – 12:00 PM IST');
-            expect(body).toContain('https://test.example.com');
+            expect(body).toContain('https://test.example.com/t/Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro');
             expect(body).toContain('Don\'t worry about trying to manufacture a perfect score');
         }
-        expect(html).toContain('<a href="https://test.example.com"');
+        expect(html).toContain('<a href="https://test.example.com/t/Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro"');
         expect(html).toContain('"good" or "bad."');
     });
 
@@ -152,6 +157,7 @@ describe('candidate-test-rescheduled email', () => {
         startsAt: '2026-10-26T04:30:00.000Z',
         endsAt: '2026-10-26T05:30:00.000Z',
         durationMinutes: 12,
+        inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro',
     };
 
     function render() {
@@ -179,7 +185,7 @@ describe('candidate-test-rescheduled email', () => {
             expect(body).toContain('has been moved to a new time');
             expect(body).toContain('Scheduled: 26 October 2026, 10:00 AM – 11:00 AM IST');
             expect(body).toContain('approximately 12 minutes');
-            expect(body).toContain('https://test.example.com');
+            expect(body).toContain('https://test.example.com/t/Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro');
             expect(body).not.toMatch(/\{\{|\}\}|undefined/);
         }
         expect(html).toContain('our team rescheduled an assessment for this email address');

@@ -1,6 +1,7 @@
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { NotificationDeliveryError } from '../../errors/notification-delivery.error.js';
 import type { NotificationsConfig } from '../../types/notifications-config.types.js';
+import { MAIL_REF_TAG } from '../../types/mail.types.js';
 import type { MailProvider, RenderedMail } from '../../types/mail.types.js';
 
 // Mistakes in the message or the account: trying again won't change the answer.
@@ -36,6 +37,7 @@ export class SesMailProvider implements MailProvider {
                     Destination: { ToAddresses: [mail.to] },
                     ReplyToAddresses: this.settings.replyTo ? [this.settings.replyTo] : undefined,
                     ConfigurationSetName: this.settings.configurationSet,
+                    EmailTags: mail.ref ? [{ Name: MAIL_REF_TAG, Value: mail.ref }] : undefined,
                     Content: {
                         Simple: {
                             Subject: { Data: mail.subject, Charset: 'UTF-8' },

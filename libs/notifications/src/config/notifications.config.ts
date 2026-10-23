@@ -27,7 +27,9 @@ const envSchema = z
 
         APP_NAME: z.string().min(1).default('InterviewCall'),
         STAFF_CONSOLE_URL: z.url().default('http://localhost:3000'),
-        TEST_PORTAL_URL: z.url().default('https://www.test-portal.interviewcall.club'),
+        // Where candidate-web runs. Every test link in an email or WhatsApp message starts with this, so there is
+        // no default in production: a wrong guess would send candidates to a page that cannot open their test.
+        TEST_PORTAL_URL: z.url().optional(),
 
         MAIL_DRIVER: z.enum(['ses', 'console']).optional(),
         MAIL_FROM_ACCOUNTS: z.string().min(3).optional(),
@@ -59,6 +61,7 @@ const envSchema = z
         }
         // The console drivers print whole messages, temporary passwords included.
         if (production && mailDriver === 'console') need('MAIL_DRIVER', 'cannot be "console" in production');
+        if (production && !env.TEST_PORTAL_URL) need('TEST_PORTAL_URL', 'is required in production: it is the address candidate-web is served from');
         if (production && whatsappDriver === 'console') need('WHATSAPP_DRIVER', 'cannot be "console" in production');
     });
 
@@ -88,7 +91,7 @@ export function loadNotificationsConfig(env: Env = process.env): NotificationsCo
         payloadKey: Buffer.from(e.NOTIFICATIONS_PAYLOAD_KEY, 'base64'),
         appName: e.APP_NAME,
         staffConsoleUrl: e.STAFF_CONSOLE_URL.replace(/\/+$/, ''),
-        testPortalUrl: e.TEST_PORTAL_URL.replace(/\/+$/, ''),
+        testPortalUrl: (e.TEST_PORTAL_URL ?? 'http://localhost:3002').replace(/\/+$/, ''),
         mail: {
             driver: e.MAIL_DRIVER ?? (production ? 'ses' : 'console'),
             from: { accounts: e.MAIL_FROM_ACCOUNTS, candidates: e.MAIL_FROM_CANDIDATES },

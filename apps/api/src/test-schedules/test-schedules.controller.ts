@@ -22,7 +22,7 @@ import type { ListSchedulesQuery, RescheduleTestInput, ScheduleTestInput } from 
 
 @ApiTags('test-schedules')
 @ApiCookieAuth()
-@Roles(UserRole.ADMIN, UserRole.ADVISOR)
+@Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.ADVISOR)
 @Controller('test-schedules')
 export class TestSchedulesController {
     constructor(private readonly schedules: TestSchedulesService) {}

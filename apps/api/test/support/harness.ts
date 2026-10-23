@@ -7,6 +7,8 @@ import { ModelService } from '@app/model';
 import { NotificationsModule } from '@app/notifications';
 import { UserRole, UserStatus } from '@app/prisma';
 import { ApiModule } from '../../src/api.module.js';
+import { SNS_FETCH } from '../../src/mail-events/sns-verifier.js';
+import type { SnsFetch } from '../../src/mail-events/sns-verifier.js';
 import { configureApp } from '../../src/app.setup.js';
 import { loadConfig } from '../../src/config/app.config.js';
 import { createFakeModel } from './fake-model.js';
@@ -38,10 +40,17 @@ export async function seedStaff(
 }
 
 /** The real API with the fake database and the fake notification queue. */
-export async function buildApp(db: FakeModel): Promise<NestExpressApplication> {
+export async function buildApp(
+    db: FakeModel,
+    options: { mailEventsTopicArn?: string; fetchText?: SnsFetch } = {},
+): Promise<NestExpressApplication> {
     process.env.ALLOWED_ORIGINS = ORIGIN;
     process.env.COOKIE_SECURE = 'false';
+    if (options.mailEventsTopicArn) process.env.MAIL_EVENTS_TOPIC_ARN = options.mailEventsTopicArn;
+    else delete process.env.MAIL_EVENTS_TOPIC_ARN;
     const moduleRef = await Test.createTestingModule({ imports: [ApiModule] })
+        .overrideProvider(SNS_FETCH)
+        .useValue(options.fetchText ?? (async () => Promise.reject(new Error('the test did not expect a network call'))))
         .overrideProvider(ModelService)
         .useValue(db)
         .overrideModule(NotificationsModule)

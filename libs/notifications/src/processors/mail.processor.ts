@@ -9,7 +9,7 @@ import { MAIL_QUEUE, SEND_MAIL_JOB } from '../queue/queue.constants.js';
 import { PayloadCipher } from '../security/payload-cipher.js';
 import { MAIL_TEMPLATES } from '../templates/mail-templates.js';
 import { TemplateService } from '../templates/template.service.js';
-import { MAIL_PROVIDER, MAIL_TEMPLATE_IDS } from '../types/mail.types.js';
+import { MAIL_PROVIDER, MAIL_REF_PATTERN, MAIL_TEMPLATE_IDS } from '../types/mail.types.js';
 import type { MailGlobals, MailProvider } from '../types/mail.types.js';
 import type { MailJobData } from '../types/notification.types.js';
 import type { NotificationsConfig } from '../types/notifications-config.types.js';
@@ -20,6 +20,7 @@ const mailJobSchema = z.object({
     template: z.enum(MAIL_TEMPLATE_IDS),
     to: z.string().min(3),
     params: z.record(z.string(), z.string()),
+    ref: z.string().regex(MAIL_REF_PATTERN).optional(),
     secure: z.string().optional(),
 });
 
@@ -72,7 +73,7 @@ export class MailProcessor extends WorkerHost {
         };
         const { sender, subject, view } = template.prepare(input, globals);
         const { html, text } = this.templates.renderMail(data.template, view);
-        return { sender, to: data.to, subject, html, text };
+        return { sender, to: data.to, subject, html, text, ref: data.ref };
     }
 
     @OnWorkerEvent('failed')

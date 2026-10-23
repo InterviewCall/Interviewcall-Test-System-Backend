@@ -41,6 +41,7 @@ describe('test schedules', () => {
         await seedStaff(db, { email: 'asha@example.com', fullName: 'Asha Advisor', role: UserRole.ADVISOR });
         await seedStaff(db, { email: 'ben@example.com', fullName: 'Ben Advisor', role: UserRole.ADVISOR });
         await seedStaff(db, { email: 'eli@example.com', fullName: 'Eli Editor', role: UserRole.EDITOR });
+        await seedStaff(db, { email: 'mia@example.com', fullName: 'Mia Manager', role: UserRole.MANAGER });
         app = await buildApp(db);
     });
     afterEach(() => app.close());
@@ -140,6 +141,18 @@ describe('test schedules', () => {
 
             expect(db._candidates).toHaveLength(1);
             expect(res.body.schedule.candidate.fullName).toBe('Rohan Existing');
+            expect(res.body.schedule.candidate.phone).toBe('+91 70446 10338'); // they had none, so the new one is kept
+        });
+
+        it('keeps the phone a known candidate already has', async () => {
+            const admin = await signIn(app, 'admin@example.com');
+            await db.candidate.create({ data: { fullName: 'Rohan Existing', email: 'rohan@example.com', phone: '+91 11111 11111' } });
+            const when = slot();
+            const res = await admin
+                .post(api('/test-schedules'))
+                .send({ candidate: candidate(), level: 'INTERMEDIATE', startsAt: when.startsAt, endsAt: when.endsAt })
+                .expect(201);
+            expect(res.body.schedule.candidate.phone).toBe('+91 11111 11111');
         });
 
         describe('rejects a request that does not make sense', () => {
@@ -155,6 +168,7 @@ describe('test schedules', () => {
                 ['a bad email', (b: any) => ({ ...b, candidate: candidate({ email: 'not-an-email' }) })],
                 ['a one-letter name', (b: any) => ({ ...b, candidate: candidate({ fullName: 'R' }) })],
                 ['a bad phone number', (b: any) => ({ ...b, candidate: candidate({ phone: 'call me' }) })],
+                ['no phone number', (b: any) => ({ ...b, candidate: { fullName: 'Rohan Das', email: 'rohan@example.com' } })],
                 ['an unknown field', (b: any) => ({ ...b, durationMinutes: 5 })],
                 ['an unknown candidate field', (b: any) => ({ ...b, candidate: candidate({ role: 'ADMIN' }) })],
             ])('%s', async (_name, change) => {
@@ -294,6 +308,12 @@ describe('test schedules', () => {
             const admin = await signIn(app, 'admin@example.com');
             await admin.post(api(`/test-schedules/${id}/resend-email`)).expect(200);
             await admin.post(api('/test-schedules/9999/resend-email')).expect(404);
+        });
+
+        it('lets a manager resend any advisor’s invitation', async () => {
+            const { id } = await bookAs('asha@example.com');
+            const mia = await signIn(app, 'mia@example.com');
+            await mia.post(api(`/test-schedules/${id}/resend-email`)).expect(200);
         });
     });
 
@@ -435,6 +455,33 @@ describe('test schedules', () => {
         });
     });
 
+    describe('as a manager', () => {
+        it('reschedules and schedules for any advisor, like an admin', async () => {
+            const asha = await signIn(app, 'asha@example.com');
+            const when = slot();
+            const booked = await asha
+                .post(api('/test-schedules'))
+                .send({ candidate: candidate(), level: 'INTERMEDIATE', startsAt: when.startsAt, endsAt: when.endsAt })
+                .expect(201);
+            const id = booked.body.schedule.id as number;
+
+            const mia = await signIn(app, 'mia@example.com');
+            const startsAtMs = Math.floor((Date.now() + 3 * DAY) / 1000) * 1000;
+            await mia
+                .post(api(`/test-schedules/${id}/reschedule`))
+                .send({ startsAt: ist(startsAtMs), endsAt: ist(startsAtMs + HOUR) })
+                .expect(200);
+            expect(db._schedules.find((s) => s.id === id)!.startsAt.getTime()).toBe(startsAtMs);
+
+            const own = slot();
+            const res = await mia
+                .post(api('/test-schedules'))
+                .send({ candidate: candidate({ email: 'new@example.com' }), level: 'ADVANCED', startsAt: own.startsAt, endsAt: own.endsAt })
+                .expect(201);
+            expect(res.body.schedule.invitedBy.fullName).toBe('Mia Manager');
+        });
+    });
+
     describe('viewing', () => {
         async function book(email: string, who: string, level: string, name: string, startsInDays: number) {
             const agent = await signIn(app, who);
@@ -442,7 +489,7 @@ describe('test schedules', () => {
             await agent
                 .post(api('/test-schedules'))
                 .send({
-                    candidate: { fullName: name, email },
+                    candidate: { fullName: name, email, phone: '+91 98765 43210' },
                     level,
                     startsAt: ist(startsAtMs),
                     endsAt: ist(startsAtMs + HOUR),
@@ -486,6 +533,18 @@ describe('test schedules', () => {
 
             const invited = await admin.get(api('/test-schedules?status=SUBMITTED')).expect(200);
             expect(invited.body.total).toBe(0);
+        });
+
+        it('shows a manager everything, lets them narrow it, and opens any test', async () => {
+            const mia = await signIn(app, 'mia@example.com');
+            expect((await mia.get(api('/test-schedules')).expect(200)).body.total).toBe(3);
+
+            const ben = db._users.find((u) => u.email === 'ben@example.com')!;
+            const byBen = await mia.get(api(`/test-schedules?invitedById=${ben.id}`)).expect(200);
+            expect(byBen.body.items.map((i: any) => i.candidate.fullName)).toEqual(['Chitra Sen']);
+
+            const any = db._schedules[0]!;
+            await mia.get(api(`/test-schedules/${any.id}`)).expect(200);
         });
 
         it('pages the results', async () => {

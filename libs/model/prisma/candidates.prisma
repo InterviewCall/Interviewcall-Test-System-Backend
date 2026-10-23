@@ -1,52 +1,75 @@
 enum TestLevel {
-    INTERMEDIATE
-    ADVANCED
+  INTERMEDIATE
+  ADVANCED
 }
 
 enum TestStatus {
-    INVITED
-    IN_PROGRESS
-    SUBMITTED
-    EXPIRED
+  INVITED
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
 }
 
 /// A person who takes the entrance test. One row per email address.
 model Candidate {
-    id        Int      @id @default(autoincrement())
-    fullName  String   @map("full_name") @db.VarChar(150)
-    email     String   @unique
-    phone     String?  @db.VarChar(50)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  fullName  String   @map("full_name") @db.VarChar(150)
+  email     String   @unique
+  phone     String?  @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    testSchedule TestSchedule?
+  testSchedule TestSchedule?
 
-    @@map("candidates")
+  @@map("candidates")
 }
 
 /// A candidate's scheduled test. A candidate has at most one; rescheduling edits it.
+/// How far an email has got, as SES reports it.
+enum MailDeliveryStatus {
+  QUEUED
+  SENT
+  DELAYED
+  DELIVERED
+  BOUNCED
+  COMPLAINED
+  REJECTED
+}
+
 model TestSchedule {
-    id          Int       @id @default(autoincrement())
-    candidateId Int       @unique @map("candidate_id")
-    /// The advisor or admin who scheduled it.
-    invitedById Int       @map("invited_by_id")
-    level       TestLevel
-    /// Fixed from the level when scheduled, so changing the level durations later never alters booked tests.
-    durationMinutes Int   @map("duration_minutes")
-    /// The window in which the candidate may start. Stored in UTC.
-    startsAt    DateTime  @map("starts_at")
-    endsAt      DateTime  @map("ends_at")
-    status      TestStatus @default(INVITED)
-    /// When the invitation email was last put on the queue. Null: it never was, so resend it.
-    invitationQueuedAt DateTime? @map("invitation_queued_at")
-    createdAt   DateTime  @default(now()) @map("created_at")
-    updatedAt   DateTime  @updatedAt @map("updated_at")
+  id                      Int                 @id @default(autoincrement())
+  candidateId             Int                 @unique @map("candidate_id")
+  /// The advisor or admin who scheduled it.
+  invitedById             Int                 @map("invited_by_id")
+  level                   TestLevel
+  /// Fixed from the level when scheduled, so changing the level durations later never alters booked tests.
+  durationMinutes         Int                 @map("duration_minutes")
+  /// The window in which the candidate may start. Stored in UTC.
+  startsAt                DateTime            @map("starts_at")
+  endsAt                  DateTime            @map("ends_at")
+  status                  TestStatus          @default(INVITED)
+  /// When the invitation email was last put on the queue. Null: it never was, so resend it.
+  invitationQueuedAt      DateTime?           @map("invitation_queued_at")
+  /// SHA-256 of the secret in the candidate's link. A new email (resend, reschedule) replaces it, which retires the old link.
+  inviteTokenHash         String?             @unique @map("invite_token_hash") @db.Char(64)
+  /// Tags the latest invitation email, so the delivery report from SES can find this row. Replaced with every new email.
+  invitationMailRef       String?             @unique @map("invitation_mail_ref") @db.VarChar(36)
+  /// Where that email got to. Null until it is queued. Only ever moves forward: a late "sent" never undoes "delivered".
+  invitationMailStatus    MailDeliveryStatus? @map("invitation_mail_status")
+  /// Why, when it matters: the bounce reason, the delay, the complaint.
+  invitationMailDetail    String?             @map("invitation_mail_detail") @db.VarChar(500)
+  /// When the status last changed.
+  invitationMailUpdatedAt DateTime?           @map("invitation_mail_updated_at")
+  createdAt               DateTime            @default(now()) @map("created_at")
+  updatedAt               DateTime            @updatedAt @map("updated_at")
 
-    candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-    invitedBy User      @relation(fields: [invitedById], references: [id], onDelete: Restrict)
+  candidate         Candidate          @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  invitedBy         User               @relation(fields: [invitedById], references: [id], onDelete: Restrict)
+  candidateSessions CandidateSession[]
+  attempt           Attempt?
 
-    @@index([invitedById, startsAt])
-    @@index([status, endsAt])
-    @@index([startsAt])
-    @@map("test_schedules")
+  @@index([invitedById, startsAt])
+  @@index([status, endsAt])
+  @@index([startsAt])
+  @@map("test_schedules")
 }

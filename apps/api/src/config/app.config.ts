@@ -23,6 +23,15 @@ function bool(env: Env, name: string, fallback: boolean): boolean {
     throw new Error(`${name} must be "true" or "false", got: ${raw}`);
 }
 
+function topicArn(env: Env): string | undefined {
+    const raw = env.MAIL_EVENTS_TOPIC_ARN;
+    if (raw === undefined || raw === '') return undefined;
+    if (!/^arn:aws[a-z-]*:sns:[a-z0-9-]+:\d{12}:[A-Za-z0-9_-]{1,256}$/.test(raw)) {
+        throw new Error(`MAIL_EVENTS_TOPIC_ARN must be an SNS topic ARN like arn:aws:sns:ap-south-1:123456789012:ses-events, got: ${raw}`);
+    }
+    return raw;
+}
+
 export function loadConfig(env: Env = process.env): AppConfig {
     const nodeEnv = env.NODE_ENV ?? 'development';
     const isProduction = nodeEnv === 'production';
@@ -47,8 +56,10 @@ export function loadConfig(env: Env = process.env): AppConfig {
         trustProxyHops: int(env, 'TRUST_PROXY_HOPS', 0, 0, 10),
         allowedOrigins,
         swaggerEnabled: bool(env, 'SWAGGER_ENABLED', !isProduction),
+        mailEvents: { topicArn: topicArn(env) },
         cookie: {
             name: env.SESSION_COOKIE_NAME ?? 'ic_staff_session',
+            candidateName: env.CANDIDATE_COOKIE_NAME ?? 'ic_candidate_session',
             secure: bool(env, 'COOKIE_SECURE', isProduction),
             sameSite,
             domain: env.COOKIE_DOMAIN || undefined,

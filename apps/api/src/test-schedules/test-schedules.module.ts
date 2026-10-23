@@ -8,5 +8,6 @@ import { TestSchedulesService } from './test-schedules.service.js';
     imports: [NotificationsModule],
     controllers: [TestSchedulesController],
     providers: [TestScheduleRepository, TestSchedulesService],
+    exports: [TestScheduleRepository],
 })
 export class TestSchedulesModule {}

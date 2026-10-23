@@ -207,6 +207,27 @@ describe('auth and users (no throttling)', () => {
         expect(JSON.stringify(list.body)).not.toContain('passwordHash');
     });
 
+    it('lets a manager look at the staff list but change nothing', async () => {
+        await seedUser(db);
+        const advisorRow = await seedUser(db, { email: 'advisor@example.com', role: UserRole.ADVISOR });
+        await seedUser(db, { email: 'manager@example.com', role: UserRole.MANAGER });
+        const manager = (await login(app, 'manager@example.com')).agent;
+
+        const list = await manager.get(api('/users')).expect(200);
+        expect(list.body.total).toBe(3);
+        expect(JSON.stringify(list.body)).not.toContain('passwordHash');
+
+        await manager
+            .post(api('/users'))
+            .send({ fullName: 'X Y', email: 'x@example.com', phone: '+91 99999 99999', role: 'ADVISOR' })
+            .expect(403);
+        await manager.get(api(`/users/${advisorRow.id}`)).expect(403);
+        await manager.patch(api(`/users/${advisorRow.id}`)).send({ role: 'ADMIN' }).expect(403);
+        await manager.post(api(`/users/${advisorRow.id}/deactivate`)).expect(403);
+        await manager.post(api(`/users/${advisorRow.id}/reset-password`)).expect(403);
+        await manager.post(api(`/users/${advisorRow.id}/reactivate`)).expect(403);
+    });
+
     it('creates users with a one-time temporary password that works once and forces a change', async () => {
         await seedUser(db);
         const admin = await login(app, 'admin@example.com');

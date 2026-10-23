@@ -7,7 +7,7 @@ import type { MailJobData } from '../types/notification.types.js';
 import { testConfig } from '../../test/support/test-config.js';
 import { MailProcessor } from './mail.processor.js';
 
-const config = testConfig({ STAFF_CONSOLE_URL: 'https://console.example.com' });
+const config = testConfig({ STAFF_CONSOLE_URL: 'https://console.example.com', TEST_PORTAL_URL: 'https://www.test-portal.interviewcall.club' });
 const cipher = new PayloadCipher(config);
 const templates = new TemplateService();
 templates.onModuleInit();
@@ -61,7 +61,25 @@ describe('MailProcessor', () => {
         expect(job.data.secure).toBeUndefined();
     });
 
-    it('sends a candidate email that has no secret part, from the candidates sender', async () => {
+    it('passes the delivery reference on to the provider, and refuses one SES would not accept', async () => {
+        const { processor, send } = setup();
+        const data = (ref: string) =>
+            fakeJob({
+                template: 'candidate-test-scheduled',
+                to: 'rohan@example.com',
+                params: { fullName: 'Rohan Das', startsAt: '2026-10-24T05:30:00.000Z', endsAt: '2026-10-24T06:30:00.000Z', durationMinutes: '22' },
+                ref,
+                secure: cipher.encrypt({ inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro' }),
+            });
+
+        await processor.process(data('b1a7c1de-0f43-4d1a-9a52-2f1f0e6c9d11'));
+        expect(send.mock.calls[0][0].ref).toBe('b1a7c1de-0f43-4d1a-9a52-2f1f0e6c9d11');
+
+        await expect(processor.process(data('not valid!'))).rejects.toThrow(/Invalid mail job/);
+        expect(send).toHaveBeenCalledOnce();
+    });
+
+    it('sends a candidate email with the sealed start link, from the candidates sender', async () => {
         const { processor, send } = setup();
         const job = fakeJob({
             template: 'candidate-test-scheduled',
@@ -72,6 +90,7 @@ describe('MailProcessor', () => {
                 endsAt: '2026-10-24T06:30:00.000Z',
                 durationMinutes: '22',
             },
+            secure: cipher.encrypt({ inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro' }),
         });
 
         await processor.process(job);
@@ -81,7 +100,7 @@ describe('MailProcessor', () => {
         expect(mail.to).toBe('rohan@example.com');
         expect(mail.text).toContain('approximately 22 minutes');
         expect(mail.text).toContain('Scheduled: 24 October 2026, 11:00 AM – 12:00 PM IST');
-        expect(mail.text).toContain('https://www.test-portal.interviewcall.club');
+        expect(mail.text).toContain('https://www.test-portal.interviewcall.club/t/Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro');
     });
 
     it('lets a retryable provider failure through so BullMQ tries again', async () => {

@@ -1,4 +1,4 @@
-import type { TestLevel, TestStatus } from '@app/prisma';
+import type { MailDeliveryStatus, TestLevel, TestStatus } from '@app/prisma';
 
 export interface ScheduleCandidate {
     id: number;
@@ -16,13 +16,18 @@ export interface ScheduleRecord {
     endsAt: Date;
     status: TestStatus;
     invitationQueuedAt: Date | null;
+    /** Where the latest invitation email got to, as SES reported it. Null until it is queued. */
+    invitationMailStatus: MailDeliveryStatus | null;
+    /** Why, for the statuses that need it: the bounce reason, the delay. */
+    invitationMailDetail: string | null;
+    invitationMailUpdatedAt: Date | null;
     createdAt: Date;
     candidate: ScheduleCandidate;
     invitedBy: { id: number; fullName: string };
 }
 
 export interface NewSchedule {
-    candidate: { fullName: string; email: string; phone?: string };
+    candidate: { fullName: string; email: string; phone: string };
     invitedById: number;
     level: TestLevel;
     durationMinutes: number;
@@ -55,9 +60,11 @@ export interface ScheduledWithEmailStatus {
 }
 
 /** The public shape of a scheduled test in API responses. */
-export interface ScheduleResponse extends ScheduleRecord {
+export interface ScheduleResponse extends Omit<ScheduleRecord, 'invitationMailStatus' | 'invitationMailDetail' | 'invitationMailUpdatedAt'> {
     /** The last moment the candidate can start and still get the full duration. */
     latestStartAt: Date;
+    /** Where the latest invitation email got to. Null until it is queued. */
+    invitationMail: { status: MailDeliveryStatus; detail: string | null; updatedAt: Date } | null;
 }
 
 export interface ScheduleWithEmailStatusResponse {

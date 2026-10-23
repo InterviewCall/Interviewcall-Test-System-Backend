@@ -7,6 +7,8 @@ export interface MailJobData {
     to: string;
     /** Not sensitive: stored as plain JSON. */
     params: Record<string, string>;
+    /** Follows the email's delivery: sent to SES as a tag and echoed in every delivery event. Not sensitive. */
+    ref?: string;
     /** Encrypted JSON of the sensitive values. Removed from the job once it is delivered or has given up. */
     secure?: string;
 }
@@ -30,6 +32,10 @@ export interface TestScheduledInput {
     endsAt: Date;
     /** How long the test takes once started. Depends on the level, so the caller supplies it. */
     durationMinutes: number;
+    /** The secret in the candidate's start link. Travels sealed, never as plain job data. */
+    inviteToken: string;
+    /** Tags this email so SES delivery reports (delivered, bounced) can be matched to it. */
+    mailRef?: string;
 }
 
 export interface SendWhatsAppInput {

@@ -1,0 +1,947 @@
+[{
+  "_id": {
+    "$oid": "67fcc193196b0ee833705bba"
+  },
+  "problemTopic": "Time Complexity & Algorithm Analysis",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTTCAA1",
+      "problemStatement": "What is the time complexity of the following function?",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "void function(int n) {\n    for (int i = 1; i <= n; i *= 2) {\n        for (int j = 1; j <= n; j++) {\n            cout << i << j;\n        }\n    }\n}"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "public class Main {\n    public static void function(int n) {\n        for (int i = 1; i <= n; i *= 2) {\n            for (int j = 1; j <= n; j++) {\n                System.out.print(i + \"\" + j + \" \");\n            }\n        }\n    }\n    public static void main(String[] args) {\n        function(5); // Example call\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "function functionName(n) {\n    for (let i = 1; i <= n; i *= 2) {\n        for (let j = 1; j <= n; j++) {\n            process.stdout.write(i + \"\" + j + \" \");\n        }\n    }\n}\n\n// Example call\nfunctionName(5);"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "def function(n):\n    i = 1\n    while i <= n:\n        for j in range(1, n + 1):\n            print(f\"{i}{j}\", end=\" \")\n        i *= 2\n\n# Example call\nfunction(5)"
+        }
+      ],
+      "options": [
+        "O(n log n)",
+        "O(n^2)",
+        "O(log n)",
+        "O(n)"
+      ],
+      "correctOption": "O(n log n)",
+      "marks": 3,
+      "_id": {
+        "$oid": "67fcf9ca3602af9bfecd2585"
+      },
+      "questionNumber": 1
+    },
+    {
+      "problemTitle": "ENTTCAA2",
+      "problemStatement": "What will be the value of sum after the below function runs?",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "void function() {\n    int i = 0;\n    int sum = 0;\n    while(i < 50) {\n        sum += i * 2;\n        i++;\n    }\n    cout<<sum;\n}"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "public class Main {\n    public static void function() {\n        int i = 0;\n        int sum = 0;\n        while (i < 50) {\n            sum += i * 2;\n            i++;\n        }\n        System.out.println(sum);\n    }\n    public static void main(String[] args) {\n        function(); // Example call\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "function functionName() {\n    let i = 0;\n    let sum = 0;\n    while (i < 50) {\n        sum += i * 2;\n        i++;\n    }\n    console.log(sum);\n}\n\n// Example call\nfunctionName();"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "def function():\n    i = 0\n    sum = 0\n    while i < 50:\n        sum += i * 2\n        i += 1\n    print(sum)\n\n\n# Example call\nfunction()"
+        }
+      ],
+      "options": [
+        "2500",
+        "2450",
+        "4900",
+        "5000"
+      ],
+      "correctOption": "2450",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcf9f23602af9bfecd2586"
+      },
+      "questionNumber": 2
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:04:35.967Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:07.794Z"
+  },
+  "__v": 2,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fcc564196b0ee833705bbf"
+  },
+  "problemTopic": "Recursion & Dynamic Programming",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTRDP1",
+      "problemStatement": "What will be the output for n = 7 in the following function?",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "int mystery(int n) {\n    if (n == 0) return 1;\n    return n * mystery(n - 2);\n}"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "public class Main {\n    public static int mystery(int n) {\n        if (n == 0) return 1;\n        return n * mystery(n - 2);\n    }\n    public static void main(String[] args) {\n        System.out.println(mystery(5)); // Example call\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "function mystery(n) {\n    if (n === 0) return 1;\n    return n * mystery(n - 2);\n}\n\n// Example call\nconsole.log(mystery(5));"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "def mystery(n):\n    if n == 0:\n        return 1\n    return n * mystery(n - 2)\n\n# Example call\nprint(mystery(5))"
+        }
+      ],
+      "options": [
+        "7",
+        "105",
+        "21",
+        "1"
+      ],
+      "correctOption": "105",
+      "marks": 2,
+      "_id": {
+        "$oid": "67fcfa0a3602af9bfecd2587"
+      },
+      "questionNumber": 3
+    },
+    {
+      "problemTitle": "ENTRDP2",
+      "problemStatement": "Consider the following recursive function: What will be the output of fun(6)?",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "int fun(int n) {\n    if (n <= 1) return n;\n    return fun(n - 1) + fun(n - 3);\n}"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "public class Main {\n    public static int fun(int n) {\n        if (n <= 1) return n;\n        return fun(n - 1) + fun(n - 3);\n    }\n    public static void main(String[] args) {\n        System.out.println(fun(5)); // Example call\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "function fun(n) {\n    if (n <= 1) return n;\n    return fun(n - 1) + fun(n - 3);\n}\n\n// Example call\nconsole.log(fun(5));"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "def fun(n):\n    if n <= 1:\n        return n\n    return fun(n - 1) + fun(n - 3)\n\n# Example call\nprint(fun(5))"
+        }
+      ],
+      "options": [
+        "6",
+        "5",
+        "1",
+        "4"
+      ],
+      "correctOption": "1",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfa213602af9bfecd2588"
+      },
+      "questionNumber": 4
+    },
+    {
+      "problemTitle": "ENTRDP3",
+      "problemStatement": "Which of the following recurrence relations represents a Fibonacci sequence?",
+      "codeStubs": null,
+      "options": [
+        "T(n) = T(n-1) + T(n-2)",
+        "T(n) = 2T(n-1) + 1",
+        "T(n) = T(n/2) + O(1)",
+        "T(n) = T(n-1) + T(n-3)"
+      ],
+      "correctOption": "T(n) = T(n-1) + T(n-2)",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfa353602af9bfecd2589"
+      },
+      "questionNumber": 5
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:20:52.373Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:07.923Z"
+  },
+  "__v": 3,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fcc8f1196b0ee833705bc6"
+  },
+  "problemTopic": "Sorting and Searching",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTSS1",
+      "problemStatement": "What is the worst-case time complexity of QuickSort?",
+      "codeStubs": null,
+      "options": [
+        "O(n log n)",
+        "O(n^2)",
+        "O(log n)",
+        "O(n)"
+      ],
+      "correctOption": "O(n^2)",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfa4c3602af9bfecd258a"
+      },
+      "questionNumber": 6
+    },
+    {
+      "problemTitle": "ENTSS2",
+      "problemStatement": "What is the number of swaps required to sort the array [4, 3, 2, 1] using Bubble Sort?",
+      "codeStubs": null,
+      "options": [
+        "6",
+        "5",
+        "7",
+        "10"
+      ],
+      "correctOption": "6",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfa643602af9bfecd258b"
+      },
+      "questionNumber": 7
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:36:01.825Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.013Z"
+  },
+  "__v": 2,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fcc9c1196b0ee833705bcb"
+  },
+  "problemTopic": "Logical Reasoning & Mathematics",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTLRM1",
+      "problemStatement": "Find the smallest number divisible by {3, 4, 5, 6, 7, 8, 9}.",
+      "codeStubs": null,
+      "options": [
+        "2520",
+        "5040",
+        "1260",
+        "720"
+      ],
+      "correctOption": "2520",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfa893602af9bfecd258c"
+      },
+      "questionNumber": 8
+    },
+    {
+      "problemTitle": "ENTLRM2",
+      "problemStatement": "How many ways can you make 10 Rs using only 1 Rs and 2 Rs coins?",
+      "codeStubs": null,
+      "options": [
+        "7",
+        "8",
+        "6",
+        "10"
+      ],
+      "correctOption": "6",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfaa23602af9bfecd258d"
+      },
+      "questionNumber": 9
+    },
+    {
+      "problemTitle": "ENTLRM3",
+      "problemStatement": "What will be the output of this bitwise operation?",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "int a = 5;\nint b = 7;\ncout << (a ^ b);"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "public class Main {\n    public static void main(String[] args) {\n        int a = 5;\n        int b = 7;\n        System.out.println(a ^ b); // XOR operation\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "let a = 5;\nlet b = 7;\nconsole.log(a ^ b); // XOR operation"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "a = 5\nb = 7\nprint(a ^ b) # XOR operation"
+        }
+      ],
+      "options": [
+        "2",
+        "5",
+        "3",
+        "7"
+      ],
+      "correctOption": "2",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfacd3602af9bfecd258e"
+      },
+      "questionNumber": 10
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:39:29.351Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.071Z"
+  },
+  "__v": 3,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fccb37196b0ee833705bd2"
+  },
+  "problemTopic": "Graph Theory & Trees",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTGTT1",
+      "problemStatement": "What is the time complexity to find the shortest path using Dijkstra’s Algorithm?",
+      "codeStubs": null,
+      "options": [
+        "O(V^2)",
+        "O(V log V)",
+        "O(E log V)",
+        "O(E + V)"
+      ],
+      "correctOption": "O(E log V)",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfadf3602af9bfecd258f"
+      },
+      "questionNumber": 11
+    },
+    {
+      "problemTitle": "ENTGTT2",
+      "problemStatement": "What is the minimum number of edges in a complete graph with N vertices?",
+      "codeStubs": null,
+      "options": [
+        "N-1",
+        "(N * (N - 1)) / 2",
+        "N * (N - 1)",
+        "None of the above"
+      ],
+      "correctOption": "(N * (N - 1)) / 2",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfaf53602af9bfecd2590"
+      },
+      "questionNumber": 12
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:45:43.523Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.129Z"
+  },
+  "__v": 2,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fccbeb196b0ee833705bd7"
+  },
+  "problemTopic": "Probability & Combinations",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTPC1",
+      "problemStatement": "If a fair dice is rolled 3 times, what is the probability of getting at least one six?",
+      "codeStubs": null,
+      "options": [
+        "1/6",
+        "1/3",
+        "91/216",
+        "125/216"
+      ],
+      "correctOption": "91/216",
+      "marks": 2,
+      "_id": {
+        "$oid": "67fcfb063602af9bfecd2591"
+      },
+      "questionNumber": 13
+    },
+    {
+      "problemTitle": "ENTPC2",
+      "problemStatement": "A bag contains 4 red, 5 green, and 6 blue balls. Two balls are drawn randomly. What is the probability both are the same color?",
+      "codeStubs": null,
+      "options": [
+        "1/3",
+        "2/5",
+        "1/2",
+        "1/4"
+      ],
+      "correctOption": "2/5",
+      "marks": 2,
+      "_id": {
+        "$oid": "67fcfb1b3602af9bfecd2592"
+      },
+      "questionNumber": 14
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:48:43.526Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.207Z"
+  },
+  "__v": 2,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fccc85196b0ee833705bdc"
+  },
+  "problemTopic": "Number Theory",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTNT1",
+      "problemStatement": "What is the sum of all prime numbers less than 20?",
+      "codeStubs": null,
+      "options": [
+        "77",
+        "50",
+        "42",
+        "45"
+      ],
+      "correctOption": "77",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfb2b3602af9bfecd2593"
+      },
+      "questionNumber": 15
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:51:17.660Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.309Z"
+  },
+  "__v": 1,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fcccc7196b0ee833705bdf"
+  },
+  "problemTopic": "String Manipulation",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTSM1",
+      "problemStatement": "What is the rank of the word \"HELP\" in a dictionary containing all its permutations?",
+      "codeStubs": null,
+      "options": [
+        "24",
+        "13",
+        "15",
+        "18"
+      ],
+      "correctOption": "13",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfb3a3602af9bfecd2594"
+      },
+      "questionNumber": 16
+    },
+    {
+      "problemTitle": "ENTSM2",
+      "problemStatement": "How many anagrams exist for the word \"TIGER\" where 'T' appears before 'G' in every case?",
+      "codeStubs": null,
+      "options": [
+        "30",
+        "24",
+        "12",
+        "60"
+      ],
+      "correctOption": "60",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfb503602af9bfecd2595"
+      },
+      "questionNumber": 17
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:52:23.530Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.362Z"
+  },
+  "__v": 2,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fccd50196b0ee833705be4"
+  },
+  "problemTopic": "Data Structures",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTDS1",
+      "problemStatement": "What is the time complexity of inserting an element in a min-heap?",
+      "codeStubs": null,
+      "options": [
+        "O(log n)",
+        "O(n log n)",
+        "O(1)",
+        "O(n)"
+      ],
+      "correctOption": "O(log n)",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfb753602af9bfecd2596"
+      },
+      "questionNumber": 18
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:54:40.731Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.417Z"
+  },
+  "__v": 1,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "67fcce68196b0ee833705be7"
+  },
+  "problemTopic": "Tricky Programming Questions",
+  "problemDescription": [
+    {
+      "problemTitle": "ENTTPQ1",
+      "problemStatement": "What will be the output of the following code?",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    vector<int> arr = {1, 2, 3};\n    vector<int>& ref = arr;\n    ref.push_back(4);\n    for (int num : arr) cout << num << \" \";\n}"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> arr = new ArrayList<>(Arrays.asList(1, 2, 3));\n        List<Integer> ref = arr;\n        ref.add(4);\n        System.out.println(arr);\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "let arr = [1, 2, 3];\nlet ref = arr;\nref.push(4);\nconsole.log(arr);"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "a = [1, 2, 3]\nb = a # 'b' now refers to the same list as 'a'\nb.append(4) # This modifies the list that both 'a' and 'b' refer to\nprint(a)"
+        }
+      ],
+      "options": [
+        "[1, 2, 3]",
+        "[1, 2, 3, 4]",
+        "[4]",
+        "None of the above"
+      ],
+      "correctOption": "[1, 2, 3, 4]",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfb863602af9bfecd2597"
+      },
+      "questionNumber": 19
+    },
+    {
+      "problemTitle": "ENTTPQ2",
+      "problemStatement": "Predict the output of this code snippet",
+      "codeStubs": [
+        {
+          "label": "C++",
+          "language": "cpp",
+          "code": "#include <iostream>\nusing namespace std;\n\nint main() {\n    int x = 5;\n    int y = x++;\n    cout << y;\n}"
+        },
+        {
+          "label": "Java",
+          "language": "cpp",
+          "code": "public class Main {\n    public static void main(String[] args) {\n        int x = 5;\n        int y = x++;\n        System.out.println(y);\n    }\n}"
+        },
+        {
+          "label": "Javascript",
+          "language": "javascript",
+          "code": "let x = 5;\nlet y = x++;\nconsole.log(y);"
+        },
+        {
+          "label": "Python",
+          "language": "python",
+          "code": "x = 5\ny = x # No direct post-increment in Python\nx += 1 # Equivalent to x++\nprint(y)"
+        }
+      ],
+      "options": [
+        "5",
+        "6",
+        "4",
+        "Undefined behavior"
+      ],
+      "correctOption": "5",
+      "marks": 5,
+      "_id": {
+        "$oid": "67fcfb973602af9bfecd2598"
+      },
+      "questionNumber": 20
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-04-14T08:59:20.356Z"
+  },
+  "updatedAt": {
+    "$date": "2025-04-14T11:58:08.486Z"
+  },
+  "__v": 2,
+  "problemLevel": "Intermediate"
+},
+{
+  "_id": {
+    "$oid": "698ae306a3d0713c9bcad6dc"
+  },
+  "problemTopic": "Advanced Tree Algorithms",
+  "problemDescription": [
+    {
+      "questionNumber": 1,
+      "problemTitle": "ETATA1",
+      "problemStatement": "## K-th Smallest Value on a Tree Path\n\nYou are working on a system that answers **path queries on a tree**, where each node has an associated **weight**.\n\nThe system must efficiently handle queries of the form:\n\n> **What is the k-th smallest value on the path between node `u` and node `v`?**\n\n### Problem Details\n\n- The underlying data structure is a **tree** with weighted nodes.\n- The tree is **static** (no updates to node weights or structure).\n- The number of queries is very large — up to **10⁵**.\n- Each query asks for an **order-statistic** (k-th smallest element) along the path between two nodes.\n\n### Goal\n\nYou are considering multiple advanced algorithmic techniques to solve this problem efficiently.\n\n### Question\n\n**Which of the following approaches gives the optimal asymptotic performance for this problem?**\n",
+      "codeStubs": null,
+      "options": [
+        "Heavy Light Decomposition + Segment Tree with sorted lists on each segment",
+        "Binary Lifting with prefix frequency arrays",
+        "Persistent Segment Tree combined with LCA",
+        "Euler Tour + RMQ with offline queries"
+      ],
+      "correctOption": "Persistent Segment Tree combined with LCA",
+      "marks": 5,
+      "_id": {
+        "$oid": "698ae306a3d0713c9bcad6dd"
+      }
+    },
+    {
+      "questionNumber": 2,
+      "problemTitle": "ETATA2",
+      "problemStatement": "## Distinct Colors in a Subtree\n\nYou are given a **rooted tree** with **N nodes**, where each node has an associated **color**.\n\nYou need to support queries of the form:\n\n> **How many distinct colors appear in the subtree of node `u`?**\n\n### Problem Details\n\n- The underlying data structure is a **rooted tree**.\n- The tree is **static** (no updates to node colors or structure).\n- The number of queries can be very large — up to **10⁵**.\n- Each query asks for the **number of distinct values** within a subtree.\n\n### Goal\n\nYou want to design a solution that answers these queries as efficiently as possible.\n\n### Question\n\n**Which technique is best suited for this problem and why?**\n",
+      "codeStubs": null,
+      "options": [
+        "Binary Indexed Tree over Euler Tour with coordinate compression",
+        "DSU on Tree (Small to Large)",
+        "Mo’s Algorithm on Trees because it handles offline subtree queries",
+        "Segment Tree with lazy propagation over DFS order"
+      ],
+      "correctOption": "DSU on Tree (Small to Large)",
+      "marks": 5,
+      "_id": {
+        "$oid": "698ae463a3d0713c9bcad6e1"
+      }
+    },
+    {
+      "questionNumber": 3,
+      "problemTitle": "ETATA3",
+      "problemStatement": "## The Kingdom’s Secure Signal Path\n\n### Story\n\nA kingdom has **N cities** connected by **N−1 encrypted roads**, forming a **tree**.  \nEach road has an associated **encryption key value**.\n\nFor intelligence analysis, the king asks multiple queries:\n\n> **“Between city `u` and city `v`, if you may choose any subset of encryption keys on the path, what is the maximum XOR value you can obtain?”**\n\n\n---\n\n\n### Problem Statement\n\nYou are given a **tree** with **N nodes**.\n\n- Each edge has an **integer weight**.\n- For a query `(u, v)`, consider **all edge weights** on the path from `u` to `v`.\n- You may choose **any subset** of those weights.\n- Compute the **maximum possible XOR value**.\n\n---\n\n### Constraints\n\n- **1 ≤ N, Q ≤ 10⁵**\n- Edge weights fit in **32-bit integers**\n\n---\n\n### Question\n\n**Which of the following approaches correctly solves this problem within time limits?**\n",
+      "codeStubs": null,
+      "options": [
+        "Heavy Light Decomposition with segment tree storing linear XOR bases",
+        "Store a prefix XOR value from the root to every node and answer queries using xor[u] ⊕ xor[v] ⊕ xor[lca(u,v)].",
+        "Store a linear XOR basis from the root to each node and subtract the LCA basis during queries.",
+        "Use Mo’s Algorithm on Trees and recompute the XOR basis from scratch for every query."
+      ],
+      "correctOption": "Heavy Light Decomposition with segment tree storing linear XOR bases",
+      "marks": 5,
+      "_id": {
+        "$oid": "698ae5d3a3d0713c9bcad6e6"
+      }
+    }
+  ],
+  "problemLevel": "Advanced",
+  "createdAt": {
+    "$date": "2026-02-10T07:49:26.902Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T08:01:23.565Z"
+  },
+  "__v": 2
+},
+{
+  "_id": {
+    "$oid": "698ae6d5a3d0713c9bcad6e9"
+  },
+  "problemTopic": "Advanced Graph Algorithm",
+  "problemDescription": [
+    {
+      "questionNumber": 4,
+      "problemTitle": "ETAGA1",
+      "problemStatement": "## Problem Statement\n\nYou are given a **directed graph** **G(V, E)** with **positive edge weights**.\n\nA **cycle** is called **mean-light** if the **average weight per edge** on the cycle is minimized across all cycles in the graph.\n\nLet **μ(G)** denote the **minimum mean cycle weight** of the graph.\n\n### Question\n\nYou want to determine which of the following statements is **always true** about **μ(G)**.\n",
+      "codeStubs": null,
+      "options": [
+        "μ(G) can be computed by running Dijkstra’s algorithm from every node and selecting the shortest cycle found.",
+        "If all edge weights are integers, then  𝜇 ( 𝐺 ) μ(G) must also be an integer.",
+        "μ(G) can be computed in polynomial time using Karp’s algorithm, and it remains valid even if negative edges exist.",
+        "μ(G) is undefined if the graph contains any negative weight edge, regardless of cycles."
+      ],
+      "correctOption": "μ(G) can be computed in polynomial time using Karp’s algorithm, and it remains valid even if negative edges exist.",
+      "marks": 5,
+      "_id": {
+        "$oid": "698ae6d5a3d0713c9bcad6ea"
+      }
+    },
+    {
+      "questionNumber": 5,
+      "problemTitle": "ETAGA2",
+      "problemStatement": "## Problem Statement\n\nYou are analyzing a **flow network** where each edge has:\n\n- **Capacity**\n- **Cost**\n\nThe objective is to find a **minimum-cost maximum flow (MCMF)**.\n\nYou decide to use the **Successive Shortest Augmenting Path (SSAP)** algorithm with **Johnson’s potentials** to handle **negative edge costs**.\n\n### Question\n\n**Which statement is TRUE regarding correctness and complexity?**\n",
+      "codeStubs": null,
+      "options": [
+        "Johnson’s potentials eliminate negative cycles permanently, making Bellman-Ford unnecessary after the first iteration.",
+        "The SSAP algorithm with potentials guarantees polynomial time, regardless of graph structure.",
+        "Potentials ensure that all reduced edge costs are non-negative, preserving shortest path correctness using Dijkstra.",
+        "Potentials can only be applied if the original graph has no negative edges."
+      ],
+      "correctOption": "Potentials ensure that all reduced edge costs are non-negative, preserving shortest path correctness using Dijkstra.",
+      "marks": 5,
+      "_id": {
+        "$oid": "698ae7a3a3d0713c9bcad6ee"
+      }
+    },
+    {
+      "questionNumber": 6,
+      "problemTitle": "ETAGA3",
+      "problemStatement": "## Problem Statement (Story-Driven)\n\nIn a **futuristic city**, teleportation gates connect **districts**.  \nEach gate:\n\n- Allows travel only in **one direction**\n- Has a **travel time** (can be **negative** due to time compression)\n- Has a **fatigue cost** per usage\n\nA traveler wants to choose **exactly K teleports** such that:\n\n- They **start and end at the same district**\n- The **average fatigue per teleport** is **minimized**\n\nIf **no cycle of length exactly K exists**, return **IMPOSSIBLE**.\n\n---\n\n## Input Description\n\n- **N**: Number of districts (nodes)\n- **M**: Number of teleport gates (edges)\n- **K**: Required number of edges in the cycle\n- Each edge: **u → v**, fatigue cost **w**\n\n---\n\n### Question\n\n**Which approach correctly solves this problem?**\n",
+      "codeStubs": null,
+      "options": [
+        "Run Floyd-Warshall and select cycles with exactly K edges.",
+        "Binary search the answer and check feasibility using K-step shortest paths with DP.",
+        "Use Bellman-Ford for K iterations and check for negative cycles.",
+        "Convert to a minimum spanning tree and search for cycles of length K."
+      ],
+      "correctOption": "Binary search the answer and check feasibility using K-step shortest paths with DP.",
+      "marks": 5,
+      "_id": {
+        "$oid": "698ae83ba3d0713c9bcad6f3"
+      }
+    }
+  ],
+  "problemLevel": "Advanced",
+  "createdAt": {
+    "$date": "2026-02-10T08:05:41.190Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T08:11:39.318Z"
+  },
+  "__v": 2
+},
+{
+  "_id": {
+    "$oid": "698aea7da3d0713c9bcad6f6"
+  },
+  "problemTopic": "Advanced DP",
+  "problemDescription": [
+    {
+      "questionNumber": 7,
+      "problemTitle": "ETADP1",
+      "problemStatement": "## Courier’s Folded Map\n\n### Story\n\nIn **Neo-Kolkata**, a courier rider has a **folded city map**. Some roads are **one-way**, some are **missing**, and some routes are only possible through certain **hubs**. The courier starts from **Hub 0**, must deliver to a set of **delivery hubs**, and return back to **Hub 0** with **minimum total travel time**.\n\nThe courier’s GPS runs the following rules:\n\n- He can travel only along the **directed roads** given.\n- He **may revisit hubs**.\n- He must visit **all delivery hubs at least once** and return to **Hub 0**.\n- If **impossible**, the output is **-1**.\n\n---\n\n### Input Format\n\n- First line: **N M K**\n  - **N** = number of hubs (`0` to `N-1`)\n  - **M** = number of directed roads\n  - **K** = number of delivery hubs\n- Next **M** lines:  \n  **u v w** meaning road **u → v** has travel time **w**\n- Next line: **K integers** = delivery hubs list  \n  (all are **distinct** and **none is 0**)\n\n---\n\n### Output\n\n- **Minimum travel time** to start at **0**, visit **all delivery hubs**, and return to **0**.\n\n---\n\n### Input\n\n5 10 3\n\n0 1 2\n\n1 2 2\n\n2 0 2\n\n0 3 10\n\n3 4 1\n\n4 0 1\n\n1 3 4\n\n3 2 1\n\n2 4 3\n\n4 1 1\n\n*Delivery hubs: 1 2 4*",
+      "codeStubs": null,
+      "options": [
+        "7",
+        "8",
+        "10",
+        "11"
+      ],
+      "correctOption": "8",
+      "marks": 5,
+      "_id": {
+        "$oid": "698aea7da3d0713c9bcad6f7"
+      }
+    },
+    {
+      "questionNumber": 8,
+      "problemTitle": "ETADP2",
+      "problemStatement": "## Uniform Lanterns During Durga Puja\n\n### Story\n\nDuring **Durga Puja**, a street has a **line of lanterns**. Each lantern has a **color code** (an integer).  \nThe electrician wants to make the entire street **“uniform”** by repeatedly applying a special operation.\n\n---\n\n### Operation (One Move)\n\n- Choose any **contiguous segment** whose lanterns are **all the same color**.\n- Repaint the **entire segment** into **any color**.\n\n---\n\n### Goal\n\nConvert the whole line into a **single color** using the **minimum number of moves**.\n\nThis resembles a **tricky repainting scheduler** used by the city committee.\n\n---\n\n### Input Format\n\n- First line: **N** — number of lanterns\n- Second line: **N integers** — color codes of the lanterns\n\n---\n\n### Output\n\n- **Minimum moves required**\n\n---\n\n### Input\n\n9\n\n1 3 3 2 2 2 3 3 1",
+      "codeStubs": null,
+      "options": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "correctOption": "3",
+      "marks": 5,
+      "_id": {
+        "$oid": "698aeadba3d0713c9bcad6fb"
+      }
+    }
+  ],
+  "problemLevel": "Advanced",
+  "createdAt": {
+    "$date": "2026-02-10T08:21:17.830Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T08:22:51.986Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "698aebdaa3d0713c9bcad6fe"
+  },
+  "problemTopic": "Advanced String Manipulation",
+  "problemDescription": [
+    {
+      "questionNumber": 9,
+      "problemTitle": "ETASA1",
+      "problemStatement": "## Problem Statement\n\nYou are given a **non-empty string** **S** of length **n**. Define:\n\n- **Z[i]** = the length of the longest substring starting at index **i** that matches the **prefix of S**, with **Z[0] = 0**.\n\nA positive integer **p** (**1 ≤ p ≤ n**) is called a **valid period** of **S** if for every index **j** where **j + p < n**, we have:\n\n> **S[j] = S[j + p]**\n\nYou are given the **full Z-array** of **S**. You want to determine whether a given **p** is a valid period **using only Z-values**, without reconstructing the string.\n\n---\n\n### Question\n\n**Which of the following conditions is _necessary and sufficient_ for `p` to be a valid period of `S`?**\n",
+      "codeStubs": null,
+      "options": [
+        "Z[p] ≥ n − p",
+        "For every multiple k of p (k = p, 2p, 3p, …), Z[k] ≥ n − k",
+        "Z[p] = p",
+        "Z[p] ≥ p"
+      ],
+      "correctOption": "Z[p] ≥ n − p",
+      "marks": 5,
+      "_id": {
+        "$oid": "698aebdaa3d0713c9bcad6ff"
+      }
+    },
+    {
+      "questionNumber": 10,
+      "problemTitle": "ETASA2",
+      "problemStatement": "## Problem Statement\n\nYou build an **Aho–Corasick automaton** over a set of patterns **P₁ … Pₘ** with total length **L** (sum of all pattern lengths).  \nThen you scan a **text** **T** of length **n**.\n\nAssume:\n\n- All transitions are stored in **hash maps or arrays**, so each transition is **O(1)**.\n- You want to **report all matches** (every occurrence of every pattern in **T**).\n- Let **occ** be the **total number of matches reported**.\n\n---\n\n### Question\n\n**Which statement about the runtime complexity is _always true_ in the worst case?**\n",
+      "codeStubs": null,
+      "options": [
+        "The scan is always O(n + L) even if you output all matches, because failure links compress output work.",
+        "The total time is O(n + L + occ), and this is tight (cannot be asymptotically improved in general).",
+        "The total time is O(n log σ + L) where σ is alphabet size, because output adds only logarithmic overhead.",
+        "The scan becomes O(n·m) in the worst case, regardless of how output links are optimized."
+      ],
+      "correctOption": "The total time is O(n + L + occ), and this is tight (cannot be asymptotically improved in general).",
+      "marks": 5,
+      "_id": {
+        "$oid": "698aec24a3d0713c9bcad703"
+      }
+    }
+  ],
+  "problemLevel": "Advanced",
+  "createdAt": {
+    "$date": "2026-02-10T08:27:06.146Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T08:28:20.991Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "698aecc1a3d0713c9bcad706"
+  },
+  "problemTopic": "Advanced Bit Manipulation",
+  "problemDescription": [
+    {
+      "questionNumber": 11,
+      "problemTitle": "ETABM1",
+      "problemStatement": "## The Vault’s Parity Lock\n\n### Story\n\nIn an **old bank vault**, a lock verifies a sequence of numbers using a **“parity handshake.”**  \nThe lock starts with a **secret key `K`** and processes an array **A** from left to right.\n\nFor every element **x** in **A**, it updates **K** using the following rules **in this exact order**:\n\n1. **K = K ^ x**\n2. If the **number of set bits in K is odd**, then  \n   **K = K + (K & -K)**  \n   *(Here, `K & -K` denotes the value of the **lowest set bit** of `K`.)*\n3. Otherwise (if the number of set bits in **K** is even),  \n   **K = K - (K & -K)**\n\nAfter processing all elements, the lock prints the **final value of K**.\n\n---\n\n### Input\n\n- First line: integer **N** — size of the array  \n- Second line: **N** space-separated integers — the array **A**  \n- Third line: integer **K** — the initial secret key\n\n---\n\n### Given Input\n\n6\n\n13 7 12 10 9 3\n\n14\n\n**What will be printed?**",
+      "codeStubs": null,
+      "options": [
+        "16",
+        "18",
+        "20",
+        "22"
+      ],
+      "correctOption": "22",
+      "marks": 5,
+      "_id": {
+        "$oid": "698aecc1a3d0713c9bcad707"
+      }
+    }
+  ],
+  "problemLevel": "Advanced",
+  "createdAt": {
+    "$date": "2026-02-10T08:30:57.276Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T08:30:57.276Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "698aed4fa3d0713c9bcad70a"
+  },
+  "problemTopic": "Mo's Algorithm",
+  "problemDescription": [
+    {
+      "questionNumber": 12,
+      "problemTitle": "ETAMO1",
+      "problemStatement": "## Problem Statement\n\nYou are given an array **A** of size **N** and **Q offline range queries**.  \nEach query asks for the **number of distinct values whose frequency in the subarray [L, R] is a prime number**.\n\nYou decide to solve this using **Mo’s Algorithm** with block size  \n**B = ⌊√N⌋**.\n\n---\n\n### Assumptions\n\n- **N, Q ≤ 2 × 10⁵**\n- Values in **A** are **arbitrary integers**\n\nYou maintain the following data structures:\n\n- **freq[x]** → frequency of value `x` in the current range  \n- **cnt[k]** → number of values that currently have frequency exactly `k`\n- A precomputed boolean array **isPrime[k]** for all possible frequencies\n\nYou define:\n\n- **currentAnswer = Σ cnt[k]** such that **isPrime[k] = true**\n\n---\n\n### Question\n\n**Which of the following statements is necessarily true for the solution to run within time limits using Mo’s Algorithm?**\n`\n",
+      "codeStubs": null,
+      "options": [
+        "The total number of add/remove operations is O(Q √N), but maintaining currentAnswer makes the algorithm O(N) per query, which is unavoidable.",
+        "If freq[x] changes from k to k+1, updating currentAnswer can always be done in O(1) time using only cnt[k], cnt[k+1], and isPrime.",
+        "Using a block size smaller than √N asymptotically guarantees fewer pointer movements and improves worst-case complexity.",
+        "Mo’s Algorithm cannot handle frequency-based queries involving primality without using an additional Fenwick Tree or Segment Tree."
+      ],
+      "correctOption": "If freq[x] changes from k to k+1, updating currentAnswer can always be done in O(1) time using only cnt[k], cnt[k+1], and isPrime.",
+      "marks": 5,
+      "_id": {
+        "$oid": "698aed4fa3d0713c9bcad70b"
+      }
+    }
+  ],
+  "problemLevel": "Advanced",
+  "createdAt": {
+    "$date": "2026-02-10T08:33:19.307Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T08:33:19.307Z"
+  },
+  "__v": 0
+}]

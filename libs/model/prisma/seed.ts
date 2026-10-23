@@ -1,10 +1,12 @@
 import 'dotenv/config';
 
+import { fileURLToPath } from 'node:url';
 import argon2 from 'argon2';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { UserStatus, UserRole } from '../src/generated/prisma/enums.js';
+import { describeResult, seedProblems } from './seeds/problems/seed-problems.js';
 
 function requireEnv(name: string): string {
     const value = process.env[name];
@@ -96,6 +98,11 @@ async function main(): Promise<void> {
 
     try {
         await seedAdmin(prisma);
+
+        // The old question bank. interviewcall.problems.json sits in the backend's root folder.
+        const problemsFile =
+            process.env.PROBLEMS_JSON_PATH ?? fileURLToPath(new URL('../../../interviewcall.problems.json', import.meta.url));
+        console.log(describeResult(await seedProblems(prisma, problemsFile)));
     } finally {
         await prisma.$disconnect();
     }

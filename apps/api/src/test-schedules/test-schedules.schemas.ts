@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TestLevel, TestStatus } from '@app/prisma';
+import { MailDeliveryStatus, TestLevel, TestStatus } from '@app/prisma';
 import { pageOf, paginationShape } from '../common/pagination.js';
 import { emailSchema } from '../users/users.schemas.js';
 import { MAX_WINDOW_MINUTES, MINUTE_MS, START_GRACE_MS, TEST_DURATION_MINUTES } from './test-levels.js';
@@ -17,8 +17,7 @@ const candidate = z
         phone: z
             .string()
             .trim()
-            .regex(/^\+?[0-9][0-9\s()-]{5,48}$/, 'must be a valid phone number')
-            .optional(),
+            .regex(/^\+?[0-9][0-9\s()-]{5,48}$/, 'must be a valid phone number'),
     })
     .strict();
 
@@ -103,6 +102,16 @@ export const scheduleResponseSchema = z.object({
     latestStartAt: dateTime.describe('The last moment the candidate can start and still get the full duration'),
     status: statusSchema,
     invitationQueuedAt: dateTime.nullable().describe('Null until the invitation email has been queued'),
+    invitationMail: z
+        .object({
+            status: z
+                .enum(MailDeliveryStatus)
+                .describe('QUEUED, SENT, DELAYED, DELIVERED, BOUNCED, COMPLAINED or REJECTED, as SES reported it. It only moves forward'),
+            detail: z.string().nullable().describe('Why, for a bounce, complaint, rejection or delay'),
+            updatedAt: dateTime.describe('When the status last changed'),
+        })
+        .nullable()
+        .describe('Where the latest invitation email got to. Null until it is queued'),
     createdAt: dateTime,
     candidate: z.object({
         id: z.number().int(),

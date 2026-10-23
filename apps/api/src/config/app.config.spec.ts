@@ -25,4 +25,12 @@ describe('loadConfig', () => {
         expect(() => loadConfig({ COOKIE_SECURE: 'yes' })).toThrow(/COOKIE_SECURE/);
         expect(() => loadConfig({ COOKIE_SAMESITE: 'none' })).toThrow(/COOKIE_SAMESITE/);
     });
+
+    it('leaves delivery reports off until an SNS topic is set, and checks the topic looks right', () => {
+        expect(loadConfig({}).mailEvents.topicArn).toBeUndefined();
+        expect(loadConfig({ MAIL_EVENTS_TOPIC_ARN: '' }).mailEvents.topicArn).toBeUndefined();
+        const arn = 'arn:aws:sns:ap-south-1:123456789012:ses-events';
+        expect(loadConfig({ MAIL_EVENTS_TOPIC_ARN: arn }).mailEvents.topicArn).toBe(arn);
+        expect(() => loadConfig({ MAIL_EVENTS_TOPIC_ARN: 'ses-events' })).toThrow(/MAIL_EVENTS_TOPIC_ARN/);
+    });
 });

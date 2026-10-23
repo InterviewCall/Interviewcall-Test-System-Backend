@@ -20,12 +20,23 @@ export interface MailGlobals {
     year: number;
 }
 
+/**
+ * The name of the SES message tag that carries a mail's reference. SES repeats the tags of a message in every
+ * delivery event, so the reference is how a "delivered" or "bounced" report finds the test it belongs to.
+ */
+export const MAIL_REF_TAG = 'mailRef';
+
+/** Letters, digits, - and _ only: what SES accepts in a tag value. */
+export const MAIL_REF_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
 export interface RenderedMail {
     sender: MailSender;
     to: string;
     subject: string;
     html: string;
     text: string;
+    /** Sent to SES as the mailRef tag, when the caller wants to follow this email's delivery. */
+    ref?: string;
 }
 
 export interface MailProvider {

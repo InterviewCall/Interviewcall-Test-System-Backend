@@ -41,6 +41,15 @@ describe('SesMailProvider', () => {
         });
     });
 
+    it('tags the message with its reference, so delivery reports can be matched to it', async () => {
+        const send = vi.fn().mockResolvedValue({});
+        await providerWith(send).send({ ...mail, ref: 'b1a7c1de-0f43-4d1a-9a52-2f1f0e6c9d11' });
+        expect(send.mock.calls[0][0].input.EmailTags).toEqual([{ Name: 'mailRef', Value: 'b1a7c1de-0f43-4d1a-9a52-2f1f0e6c9d11' }]);
+
+        await providerWith(send).send(mail);
+        expect(send.mock.calls[1][0].input.EmailTags).toBeUndefined();
+    });
+
     it('sends candidate mail from the candidates address', async () => {
         const send = vi.fn().mockResolvedValue({});
         await providerWith(send).send({ ...mail, sender: 'candidates' });

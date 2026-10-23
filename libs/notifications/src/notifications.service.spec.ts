@@ -58,9 +58,10 @@ describe('NotificationsService.sendTestScheduled', () => {
         startsAt: new Date('2026-10-24T05:30:00Z'),
         endsAt: new Date('2026-10-24T06:30:00Z'),
         durationMinutes: 12,
+        inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro',
     };
 
-    it('queues a plain job: params as strings, nothing sealed', async () => {
+    it('queues a job with plain params as strings and the start secret sealed', async () => {
         const { service, mailAdd } = setup();
         await expect(service.sendTestScheduled(slot)).resolves.toBe(true);
         expect(mailAdd).toHaveBeenCalledWith('send-mail', {
@@ -72,7 +73,11 @@ describe('NotificationsService.sendTestScheduled', () => {
                 endsAt: '2026-10-24T06:30:00.000Z',
                 durationMinutes: '12',
             },
+            secure: expect.any(String),
         });
+        const job = mailAdd.mock.calls[0]![1] as { secure: string };
+        expect(JSON.stringify(job)).not.toContain('Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro');
+        expect(cipher.decrypt(job.secure)).toEqual({ inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro' });
     });
 
     it('reports false when the queue is down', async () => {
@@ -89,9 +94,10 @@ describe('NotificationsService.sendTestRescheduled', () => {
         startsAt: new Date('2026-10-26T04:30:00Z'),
         endsAt: new Date('2026-10-26T05:30:00Z'),
         durationMinutes: 22,
+        inviteToken: 'Xq3v9Lm2Zr7Tp5Wc8Nb4Hd6Ja1Ks0Ye3Uf2Gi9Ro',
     };
 
-    it('queues the rescheduled template with the same plain params', async () => {
+    it('queues the rescheduled template with the same plain params and sealed secret', async () => {
         const { service, mailAdd } = setup();
         await expect(service.sendTestRescheduled(slot)).resolves.toBe(true);
         expect(mailAdd).toHaveBeenCalledWith('send-mail', {
@@ -103,6 +109,7 @@ describe('NotificationsService.sendTestRescheduled', () => {
                 endsAt: '2026-10-26T05:30:00.000Z',
                 durationMinutes: '22',
             },
+            secure: expect.any(String),
         });
     });
 

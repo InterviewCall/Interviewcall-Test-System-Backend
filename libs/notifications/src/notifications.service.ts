@@ -76,7 +76,7 @@ export class NotificationsService {
         }
     }
 
-    /** Emails a candidate their test slot. Nothing in it is secret, so the job carries no sealed part. */
+    /** Emails a candidate their test slot. The start link carries a secret, so it travels in the sealed part of the job. */
     sendTestScheduled(input: TestScheduledInput): Promise<boolean> {
         return this.queueCandidateSlot('candidate-test-scheduled', input);
     }
@@ -96,6 +96,8 @@ export class NotificationsService {
                 endsAt: input.endsAt.toISOString(),
                 durationMinutes: String(input.durationMinutes),
             },
+            ref: input.mailRef,
+            secure: this.cipher.encrypt({ inviteToken: input.inviteToken }),
         };
 
         try {

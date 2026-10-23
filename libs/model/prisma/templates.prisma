@@ -1,0 +1,70 @@
+/// A named test, such as the Intermediate entrance test. What it contains lives in its versions.
+model TestTemplate {
+  id        Int       @id @default(autoincrement())
+  /// Short and stable, for example "intermediate".
+  code      String    @unique @db.VarChar(40)
+  name      String    @db.VarChar(150)
+  level     TestLevel
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  versions TemplateVersion[]
+
+  @@index([level])
+  @@map("test_templates")
+}
+
+/// The frozen rules of a test: how long it runs, the pass mark and exactly which questions it holds.
+/// Publishing a change makes a new version, so a test that was already given never changes under it.
+model TemplateVersion {
+  id              Int           @id @default(autoincrement())
+  templateId      Int           @map("template_id")
+  version         Int
+  durationMinutes Int           @map("duration_minutes")
+  passPercent     Int           @default(50) @map("pass_percent")
+  instructionsMd  String?       @map("instructions_md") @db.Text
+  status          PublishStatus @default(DRAFT)
+  publishedAt     DateTime?     @map("published_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  template TestTemplate      @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  sections TemplateSection[]
+  attempts Attempt[]
+
+  @@unique([templateId, version])
+  @@index([templateId, status])
+  @@map("template_versions")
+}
+
+/// One section of a template version, in order. Survey sections set scored to false.
+model TemplateSection {
+  id                Int     @id @default(autoincrement())
+  templateVersionId Int     @map("template_version_id")
+  topicId           Int     @map("topic_id")
+  position          Int
+  scored            Boolean @default(true)
+
+  templateVersion TemplateVersion    @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
+  topic           Topic              @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  questions       TemplateQuestion[]
+
+  @@unique([templateVersionId, position])
+  @@unique([templateVersionId, topicId])
+  @@map("template_sections")
+}
+
+/// The exact question version asked at this place in the section.
+model TemplateQuestion {
+  id                Int @id @default(autoincrement())
+  sectionId         Int @map("section_id")
+  questionVersionId Int @map("question_version_id")
+  position          Int
+
+  section         TemplateSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  questionVersion QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([sectionId, position])
+  @@unique([sectionId, questionVersionId])
+  @@index([questionVersionId])
+  @@map("template_questions")
+}

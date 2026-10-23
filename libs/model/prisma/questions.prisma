@@ -1,0 +1,94 @@
+/// MCQ questions are scored. SURVEY questions are asked and kept for placement but never scored.
+enum QuestionType {
+  MCQ
+  SURVEY
+}
+
+/// Used by questions and by test template versions.
+/// DRAFT: being written, never shown to a candidate. PUBLISHED: usable. ARCHIVED: retired, history keeps it.
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// A section name such as "Graph Theory". Templates group their questions by topic.
+model Topic {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  questions Question[]
+  sections  TemplateSection[]
+
+  @@map("topics")
+}
+
+/// The stable identity of a question. Its words live in question_versions, so editing a question
+/// adds a version instead of changing what a candidate was once asked.
+model Question {
+  id          Int           @id @default(autoincrement())
+  topicId     Int           @map("topic_id")
+  type        QuestionType  @default(MCQ)
+  status      PublishStatus @default(DRAFT)
+  /// The staff member who wrote it. Null for questions imported from the old system.
+  createdById Int?          @map("created_by_id")
+  /// The question's _id in the old MongoDB `problems` collection, so the old system's results can be
+  /// matched to it and so importing the same file twice never makes a copy.
+  legacyId    String?       @unique @map("legacy_id") @db.VarChar(24)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  /// Soft delete: a deleted question disappears from the bank but past attempts still point at it.
+  deletedAt   DateTime?     @map("deleted_at")
+
+  topic     Topic             @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  createdBy User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  versions  QuestionVersion[]
+
+  @@index([topicId, status])
+  @@index([status, deletedAt])
+  @@map("questions")
+}
+
+/// What a candidate sees. Immutable once published: an edit is a new row with the next version number.
+model QuestionVersion {
+  id            Int      @id @default(autoincrement())
+  questionId    Int      @map("question_id")
+  version       Int
+  /// The question's code from the old system, such as ENTTCAA1. Shown to staff, never to candidates.
+  title         String   @db.VarChar(150)
+  statementMd   String   @map("statement_md") @db.MediumText
+  /// Starter code per language: [{ "language": "python", "label": "Python", "code": "..." }]. Null when there is none.
+  codeStubs     Json?    @map("code_stubs")
+  /// Marks for a correct answer. 0 for survey questions.
+  marks         Int      @default(1)
+  explanationMd String?  @map("explanation_md") @db.Text
+  createdById   Int?     @map("created_by_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  question       Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdBy      User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  options        QuestionOption[]
+  templated      TemplateQuestion[]
+  attemptAnswers AttemptAnswer[]
+
+  @@unique([questionId, version])
+  @@map("question_versions")
+}
+
+/// An option is a row, and scoring compares option ids. Fixing a typo in an option's text never changes who was right.
+/// Exactly one option of an MCQ version has isCorrect = true; the API checks that when a question is saved.
+model QuestionOption {
+  id                Int     @id @default(autoincrement())
+  questionVersionId Int     @map("question_version_id")
+  position          Int
+  textMd            String  @map("text_md") @db.Text
+  isCorrect         Boolean @default(false) @map("is_correct")
+
+  questionVersion QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Cascade)
+  attemptAnswers  AttemptAnswer[]
+
+  @@unique([questionVersionId, position])
+  @@map("question_options")
+}

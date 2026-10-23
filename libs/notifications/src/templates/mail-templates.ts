@@ -86,18 +86,20 @@ const candidateSlotSchema = z.object({
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
     durationMinutes: z.coerce.number().int().min(1).max(600),
+    /** Arrives from the sealed part of the job. */
+    inviteToken: z.string().min(16),
 });
 
 const candidateTestScheduled = defineMailTemplate({
     sender: 'candidates',
     schema: candidateSlotSchema,
-    subject: (_data, { appName }) => `Your ${appName} readiness assessment`,
+    subject: (data, { appName }) => `Your next ${appName} step: ${data.durationMinutes}-minute readiness assessment`,
     view: (data, globals) => ({
         ...globals,
         firstName: data.fullName.trim().split(/\s+/)[0],
         durationMinutes: data.durationMinutes,
         scheduledAt: formatWindow(new Date(data.startsAt), new Date(data.endsAt)),
-        testPortalUrl: globals.testPortalUrl,
+        startUrl: `${globals.testPortalUrl}/t/${encodeURIComponent(data.inviteToken)}`,
         preheader: `Your assessment takes about ${data.durationMinutes} minutes.`,
         footerNote: `Sent by ${globals.appName} because our team scheduled an assessment for this email address.`,
     }),
@@ -112,7 +114,7 @@ const candidateTestRescheduled = defineMailTemplate({
         firstName: data.fullName.trim().split(/\s+/)[0],
         durationMinutes: data.durationMinutes,
         scheduledAt: formatWindow(new Date(data.startsAt), new Date(data.endsAt)),
-        testPortalUrl: globals.testPortalUrl,
+        startUrl: `${globals.testPortalUrl}/t/${encodeURIComponent(data.inviteToken)}`,
         preheader: 'Your assessment has moved. Here is your new time.',
         footerNote: `Sent by ${globals.appName} because our team rescheduled an assessment for this email address.`,
     }),

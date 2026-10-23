@@ -32,9 +32,9 @@ describe('loadNotificationsConfig', () => {
 
     it('defaults to the real providers in production and demands their settings', () => {
         const base = { NODE_ENV: 'production', NOTIFICATIONS_PAYLOAD_KEY: KEY };
-        expect(() => loadNotificationsConfig(base)).toThrow(/MAIL_FROM_ACCOUNTS[\s\S]*MAIL_FROM_CANDIDATES[\s\S]*AWS_REGION[\s\S]*AISENSY_API_KEY/);
+        expect(() => loadNotificationsConfig(base)).toThrow(/MAIL_FROM_ACCOUNTS[\s\S]*MAIL_FROM_CANDIDATES[\s\S]*AWS_REGION[\s\S]*AISENSY_API_KEY[\s\S]*TEST_PORTAL_URL/);
 
-        const config = loadNotificationsConfig({ ...base, ...SES, AISENSY_API_KEY: 'k' });
+        const config = loadNotificationsConfig({ ...base, ...SES, AISENSY_API_KEY: 'k', TEST_PORTAL_URL: 'https://t.example.com' });
         expect(config.mail.driver).toBe('ses');
         expect(config.mail.from).toEqual({
             accounts: SES.MAIL_FROM_ACCOUNTS,
@@ -59,12 +59,25 @@ describe('loadNotificationsConfig', () => {
         );
     });
 
-    it('defaults the test portal link, and drops a trailing slash from a custom one', () => {
+    it('points the test link at local candidate-web by default, and drops a trailing slash from a custom one', () => {
         const env = { NOTIFICATIONS_PAYLOAD_KEY: KEY };
-        expect(loadNotificationsConfig(env).testPortalUrl).toBe('https://www.test-portal.interviewcall.club');
+        expect(loadNotificationsConfig(env).testPortalUrl).toBe('http://localhost:3002');
         expect(loadNotificationsConfig({ ...env, TEST_PORTAL_URL: 'https://t.example.com/' }).testPortalUrl).toBe(
             'https://t.example.com',
         );
         expect(() => loadNotificationsConfig({ ...env, TEST_PORTAL_URL: 'nope' })).toThrow(/TEST_PORTAL_URL/);
+    });
+
+    it('does not guess the test link in production', () => {
+        const prod = {
+            NOTIFICATIONS_PAYLOAD_KEY: KEY,
+            NODE_ENV: 'production',
+            MAIL_FROM_ACCOUNTS: 'a@example.com',
+            MAIL_FROM_CANDIDATES: 'c@example.com',
+            AWS_REGION: 'ap-south-1',
+            AISENSY_API_KEY: 'key',
+        };
+        expect(() => loadNotificationsConfig(prod)).toThrow(/TEST_PORTAL_URL/);
+        expect(loadNotificationsConfig({ ...prod, TEST_PORTAL_URL: 'https://t.example.com' }).testPortalUrl).toBe('https://t.example.com');
     });
 });

@@ -153,6 +153,12 @@ export function createFakeModel() {
             candidates.push(row);
             return project(row, select);
         },
+        async update({ where, data, select }: Row) {
+            const row = candidates.find((c) => c.id === where.id);
+            if (!row) throw new Error('Record to update not found');
+            Object.assign(row, data, { updatedAt: new Date() });
+            return project(row, select);
+        },
     };
 
     const testSchedule = {
@@ -163,6 +169,10 @@ export function createFakeModel() {
                 id: ++scheduleSeq,
                 status: 'INVITED',
                 invitationQueuedAt: null,
+                invitationMailRef: null,
+                invitationMailStatus: null,
+                invitationMailDetail: null,
+                invitationMailUpdatedAt: null,
                 createdAt: now,
                 updatedAt: now,
                 ...data,
@@ -195,7 +205,14 @@ export function createFakeModel() {
         },
     };
 
+    const candidateSession = {
+        async updateMany() {
+            return { count: 0 };
+        },
+    };
+
     const model = {
+        candidateSession,
         user,
         session,
         candidate,

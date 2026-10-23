@@ -50,7 +50,9 @@ export class UsersController {
         return { user: toUserResponse(user), temporaryPassword, emailQueued };
     }
 
+    // The one thing a manager can do here: look. Everything else on this controller stays admin-only.
     @Get()
+    @Roles(UserRole.ADMIN, UserRole.MANAGER)
     @ApiOperation({ summary: 'List staff accounts' })
     @ApiZodQuery(listUsersQuerySchema)
     @ApiZodResponse(200, userPageResponseSchema)
