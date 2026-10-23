@@ -38,7 +38,7 @@ if ! swapon --show | grep -q .; then
 fi
 
 echo "==> $APP_DIR"
-install -d -o "$APP_USER" -g "$APP_USER" "$APP_DIR" "$APP_DIR/mariadb/conf.d" "$APP_DIR/backups"
+install -d -o "$APP_USER" -g "$APP_USER" "$APP_DIR" "$APP_DIR/mariadb" "$APP_DIR/mariadb/conf.d" "$APP_DIR/backups"
 install -o "$APP_USER" -g "$APP_USER" -m 0644 "$SRC/docker-compose.yml" "$APP_DIR/docker-compose.yml"
 install -o "$APP_USER" -g "$APP_USER" -m 0644 "$SRC/Caddyfile" "$APP_DIR/Caddyfile"
 install -o "$APP_USER" -g "$APP_USER" -m 0644 "$SRC/mariadb/conf.d/tuning.cnf" "$APP_DIR/mariadb/conf.d/tuning.cnf"

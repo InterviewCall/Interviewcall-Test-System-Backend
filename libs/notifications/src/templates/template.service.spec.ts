@@ -49,6 +49,12 @@ describe('staff-account-ready email', () => {
         expect(html).not.toContain('undefined');
     });
 
+    it('shows the InterviewCall logo, served from the test portal, beside the name', () => {
+        const { html } = render();
+        expect(html).toContain('<img src="https://test.example.com/images/ic-logo.png"');
+        expect(html).toContain('>InterviewCall</span>');
+    });
+
     it('words each reason differently', () => {
         expect(render({ reason: 'reset' })).toMatchObject({ subject: 'Your InterviewCall console password was reset' });
         expect(render({ reason: 'reset' }).text).toContain('Your password was reset');
