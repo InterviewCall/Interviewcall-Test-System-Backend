@@ -12,7 +12,9 @@ import {
 } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@app/prisma';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { z } from 'zod';
+import { sessionResponseSchema } from '../auth/auth.schemas.js';
+import { CurrentSessionId, CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import type { AuthUser } from '../common/types/authenticated-request.types.js';
 import type { Page } from '../common/types/pagination.types.js';
@@ -67,6 +69,13 @@ export class UsersController {
     @ApiZodResponse(200, userResponseSchema)
     async get(@Param('id', ParseIntPipe) id: number): Promise<UserResponse> {
         return toUserResponse(await this.users.get(id));
+    }
+
+    @Get(':id/sessions')
+    @ApiOperation({ summary: "Where a staff member is signed in right now. Admins only; it can't sign anyone out." })
+    @ApiZodResponse(200, z.array(sessionResponseSchema))
+    sessions(@Param('id', ParseIntPipe) id: number, @CurrentSessionId() sessionId: number) {
+        return this.users.listSessions(id, sessionId);
     }
 
     @Patch(':id')

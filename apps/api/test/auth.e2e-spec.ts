@@ -228,6 +228,36 @@ describe('auth and users (no throttling)', () => {
         await manager.post(api(`/users/${advisorRow.id}/reactivate`)).expect(403);
     });
 
+    it("lets an admin see where any staff member is signed in, and nobody else", async () => {
+        await seedUser(db);
+        const advisorRow = await seedUser(db, { email: 'advisor@example.com', role: UserRole.ADVISOR });
+        await seedUser(db, { email: 'manager@example.com', role: UserRole.MANAGER });
+        const admin = (await login(app, 'admin@example.com')).agent;
+        await login(app, 'advisor@example.com');
+        await login(app, 'advisor@example.com');
+
+        const theirs = await admin.get(api(`/users/${advisorRow.id}/sessions`)).expect(200);
+        expect(theirs.body).toHaveLength(2);
+        // None of them is the admin's own session, and nothing secret comes with them.
+        expect(theirs.body.every((s: { current: boolean }) => s.current === false)).toBe(true);
+        expect(Object.keys(theirs.body[0]).sort()).toEqual(['createdAt', 'current', 'id', 'ip', 'lastSeenAt', 'userAgent']);
+
+        // Looking at your own account through the staff list still marks the session you are using.
+        const own = await admin.get(api('/users/1/sessions')).expect(200);
+        expect(own.body).toHaveLength(1);
+        expect(own.body[0].current).toBe(true);
+
+        await admin.get(api('/users/999/sessions')).expect(404);
+        await admin.get(api('/users/abc/sessions')).expect(400);
+
+        // Managers can read the staff list, but not this. Advisors can't read either.
+        const manager = (await login(app, 'manager@example.com')).agent;
+        await manager.get(api(`/users/${advisorRow.id}/sessions`)).expect(403);
+        const advisor = (await login(app, 'advisor@example.com')).agent;
+        await advisor.get(api('/users/1/sessions')).expect(403);
+        await request(app.getHttpServer()).get(api(`/users/${advisorRow.id}/sessions`)).expect(401);
+    });
+
     it('creates users with a one-time temporary password that works once and forces a change', async () => {
         await seedUser(db);
         const admin = await login(app, 'admin@example.com');

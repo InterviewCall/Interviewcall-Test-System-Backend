@@ -59,6 +59,13 @@ export class UsersService {
         return user;
     }
 
+    /** The devices a staff member is signed in on. `current` is true only for the caller's own session. */
+    async listSessions(id: number, currentSessionId: number) {
+        await this.get(id);
+        const rows = await this.sessions.listActive(id);
+        return rows.map((row) => ({ ...row, current: row.id === currentSessionId }));
+    }
+
     async update(id: number, dto: UpdateUserInput, actor: AuthUser): Promise<AuthUser> {
         if (id === actor.id && dto.role !== undefined && dto.role !== actor.role) {
             // Otherwise the last admin could lock everyone out of user management.
