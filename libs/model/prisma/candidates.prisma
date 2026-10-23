@@ -10,7 +10,7 @@ enum TestStatus {
   EXPIRED
 }
 
-/// A person who takes the entrance test. One row per email address.
+/// A person who takes the entrance test. One row per email address, however many tests they are booked for.
 model Candidate {
   id        Int      @id @default(autoincrement())
   fullName  String   @map("full_name") @db.VarChar(150)
@@ -19,12 +19,11 @@ model Candidate {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  testSchedule TestSchedule?
+  testSchedules TestSchedule[]
 
   @@map("candidates")
 }
 
-/// A candidate's scheduled test. A candidate has at most one; rescheduling edits it.
 /// How far an email has got, as SES reports it.
 enum MailDeliveryStatus {
   QUEUED
@@ -36,9 +35,11 @@ enum MailDeliveryStatus {
   REJECTED
 }
 
+/// One scheduled test. A candidate can have any number of them, before or after an earlier one is submitted;
+/// rescheduling edits the test it is done on.
 model TestSchedule {
   id                      Int                 @id @default(autoincrement())
-  candidateId             Int                 @unique @map("candidate_id")
+  candidateId             Int                 @map("candidate_id")
   /// The advisor or admin who scheduled it.
   invitedById             Int                 @map("invited_by_id")
   level                   TestLevel
@@ -68,6 +69,7 @@ model TestSchedule {
   candidateSessions CandidateSession[]
   attempt           Attempt?
 
+  @@index([candidateId])
   @@index([invitedById, startsAt])
   @@index([status, endsAt])
   @@index([startsAt])

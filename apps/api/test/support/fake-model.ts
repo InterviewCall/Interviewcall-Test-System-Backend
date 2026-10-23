@@ -141,12 +141,7 @@ export function createFakeModel() {
         async findUnique({ where, select }: Row) {
             const row = candidates.find((c) => c.email === where.email);
             if (!row) return null;
-            const out = project(row, select)!;
-            if (select?.testSchedule) {
-                const booked = schedules.find((s) => s.candidateId === row.id);
-                out.testSchedule = booked ? project(booked, select.testSchedule.select) : null;
-            }
-            return out;
+            return project(row, select);
         },
         async create({ data, select }: Row) {
             if (candidates.some((c) => c.email === data.email)) throw uniqueViolation();
@@ -165,7 +160,6 @@ export function createFakeModel() {
 
     const testSchedule = {
         async create({ data, select }: Row) {
-            if (schedules.some((s) => s.candidateId === data.candidateId)) throw uniqueViolation();
             const now = new Date();
             const row = {
                 id: ++scheduleSeq,

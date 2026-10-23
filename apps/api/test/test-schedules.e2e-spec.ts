@@ -113,20 +113,36 @@ describe('test schedules', () => {
             expect(fakeNotifications.testScheduledEmails).toHaveLength(0);
         });
 
-        it('allows one test per candidate, whatever the email capitalisation', async () => {
+        it('books as many tests as asked for one email, even after an earlier one was submitted', async () => {
             const admin = await signIn(app, 'admin@example.com');
             const when = slot();
-            const body = (email: string) => ({
+            const body = (email: string, level: 'INTERMEDIATE' | 'ADVANCED') => ({
                 candidate: candidate({ email }),
-                level: 'ADVANCED',
+                level,
                 startsAt: when.startsAt,
                 endsAt: when.endsAt,
             });
-            await admin.post(api('/test-schedules')).send(body('rohan@example.com')).expect(201);
-            await admin.post(api('/test-schedules')).send(body('Rohan@Example.COM')).expect(409);
+            const first = await admin.post(api('/test-schedules')).send(body('rohan@example.com', 'ADVANCED')).expect(201);
 
-            expect(db._schedules).toHaveLength(1);
-            expect(fakeNotifications.testScheduledEmails).toHaveLength(1);
+            // Finished: the candidate submitted it. A second test for the same person is still welcome.
+            db._schedules[0].status = 'SUBMITTED';
+            const second = await admin.post(api('/test-schedules')).send(body('Rohan@Example.COM', 'INTERMEDIATE')).expect(201);
+            const third = await admin.post(api('/test-schedules')).send(body('rohan@example.com', 'ADVANCED')).expect(201);
+
+            // One person, three separate tests.
+            expect(db._candidates).toHaveLength(1);
+            expect(db._schedules).toHaveLength(3);
+            const ids = [first, second, third].map((res) => res.body.schedule.id);
+            expect(new Set(ids).size).toBe(3);
+            expect(second.body.schedule.candidate.id).toBe(first.body.schedule.candidate.id);
+
+            // Each test has its own email and its own link, so one never opens or retires another.
+            expect(fakeNotifications.testScheduledEmails).toHaveLength(3);
+            const tokens = fakeNotifications.testScheduledEmails.map((email) => email.inviteToken);
+            expect(new Set(tokens).size).toBe(3);
+
+            // The earlier test is left exactly as it was.
+            expect(db._schedules[0].status).toBe('SUBMITTED');
         });
 
         it('reuses a known candidate who has no test yet', async () => {

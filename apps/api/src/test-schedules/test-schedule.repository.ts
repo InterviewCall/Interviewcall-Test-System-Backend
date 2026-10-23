@@ -20,14 +20,6 @@ export const scheduleSelect = {
     invitedBy: { select: { id: true, fullName: true } },
 } as const satisfies Prisma.TestScheduleSelect;
 
-/** Thrown by create() when the candidate already has a test, so callers never need Prisma error codes. */
-export class CandidateAlreadyScheduledError extends Error {
-    constructor(readonly email: string) {
-        super(`${email} already has a test scheduled`);
-        this.name = 'CandidateAlreadyScheduledError';
-    }
-}
-
 @Injectable()
 export class TestScheduleRepository {
     constructor(private readonly db: ModelService) {}
@@ -42,46 +34,47 @@ export class TestScheduleRepository {
     }
 
     /**
-     * Books the test, creating the candidate first if this email is new. A candidate who is
-     * already known but has no test yet is reused as they are, except that a phone number is filled
-     * in when they had none (older candidates were saved without one). One test per candidate.
+     * Books the test, creating the candidate first if this email is new. A candidate who is already
+     * known is reused as they are, except that a phone number is filled in when they had none (older
+     * candidates were saved without one). A candidate can have any number of tests, including a new
+     * one after an earlier one was submitted.
      */
     async create(input: NewSchedule): Promise<ScheduleRecord> {
-        const { candidate } = input;
         try {
-            return await this.db.$transaction(async (tx) => {
-                const existing = await tx.candidate.findUnique({
-                    where: { email: candidate.email },
-                    select: { id: true, phone: true, testSchedule: { select: { id: true } } },
-                });
-                if (existing?.testSchedule) throw new CandidateAlreadyScheduledError(candidate.email);
-
-                if (existing && !existing.phone) {
-                    await tx.candidate.update({ where: { id: existing.id }, data: { phone: candidate.phone } });
-                }
-                const candidateId =
-                    existing?.id ??
-                    (await tx.candidate.create({ data: candidate, select: { id: true } })).id;
-
-                return tx.testSchedule.create({
-                    data: {
-                        candidateId,
-                        invitedById: input.invitedById,
-                        level: input.level,
-                        durationMinutes: input.durationMinutes,
-                        startsAt: input.startsAt,
-                        endsAt: input.endsAt,
-                    },
-                    select: scheduleSelect,
-                });
-            });
+            return await this.book(input);
         } catch (error) {
-            // Two requests for the same new email can both pass the check above; the unique indexes catch the loser.
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                throw new CandidateAlreadyScheduledError(candidate.email);
-            }
+            // Two requests for the same new email can both find no candidate; the unique email index stops
+            // the second one. Going round again finds the candidate the first request made.
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') return this.book(input);
             throw error;
         }
+    }
+
+    private book(input: NewSchedule): Promise<ScheduleRecord> {
+        const { candidate } = input;
+        return this.db.$transaction(async (tx) => {
+            const existing = await tx.candidate.findUnique({
+                where: { email: candidate.email },
+                select: { id: true, phone: true },
+            });
+            if (existing && !existing.phone) {
+                await tx.candidate.update({ where: { id: existing.id }, data: { phone: candidate.phone } });
+            }
+            const candidateId =
+                existing?.id ?? (await tx.candidate.create({ data: candidate, select: { id: true } })).id;
+
+            return tx.testSchedule.create({
+                data: {
+                    candidateId,
+                    invitedById: input.invitedById,
+                    level: input.level,
+                    durationMinutes: input.durationMinutes,
+                    startsAt: input.startsAt,
+                    endsAt: input.endsAt,
+                },
+                select: scheduleSelect,
+            });
+        });
     }
 
     /**

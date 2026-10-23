@@ -7,7 +7,7 @@ import { seesAllTests } from '../common/roles.js';
 import type { AuthUser } from '../common/types/authenticated-request.types.js';
 import type { Page } from '../common/types/pagination.types.js';
 import { latestStartAt, MINUTE_MS, TEST_DURATION_MINUTES } from './test-levels.js';
-import { CandidateAlreadyScheduledError, TestScheduleRepository } from './test-schedule.repository.js';
+import { TestScheduleRepository } from './test-schedule.repository.js';
 import type { ScheduleRecord, ScheduledWithEmailStatus } from './types/test-schedule.types.js';
 import type { ListSchedulesQuery, RescheduleTestInput, ScheduleTestInput } from './types/test-schedule-input.types.js';
 
@@ -28,22 +28,14 @@ export class TestSchedulesService {
         const durationMinutes = TEST_DURATION_MINUTES[dto.level];
         this.assertCanStillStart(dto.endsAt, durationMinutes);
 
-        let created: ScheduleRecord;
-        try {
-            created = await this.schedules.create({
-                candidate: dto.candidate,
-                invitedById: actor.id,
-                level: dto.level,
-                durationMinutes,
-                startsAt: dto.startsAt,
-                endsAt: dto.endsAt,
-            });
-        } catch (error) {
-            if (error instanceof CandidateAlreadyScheduledError) {
-                throw new ConflictException('This candidate already has a test scheduled');
-            }
-            throw error;
-        }
+        const created = await this.schedules.create({
+            candidate: dto.candidate,
+            invitedById: actor.id,
+            level: dto.level,
+            durationMinutes,
+            startsAt: dto.startsAt,
+            endsAt: dto.endsAt,
+        });
         this.logger.log(`Test ${created.id} (${created.level}) scheduled for candidate ${created.candidate.id} by user ${actor.id}`);
 
         return this.sendInvitation(created, 'scheduled');
