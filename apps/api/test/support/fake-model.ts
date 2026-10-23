@@ -2,7 +2,9 @@ import { Prisma } from '@app/prisma';
 
 type Row = Record<string, any>;
 
-/** Applies a Prisma-style `select` (or leaves the row whole). */
+/** Applies a Prisma-style `select` (or leaves the row whole). A row that exists stays non-null for callers. */
+function project(row: Row, select?: Record<string, any>): Row;
+function project(row: Row | null, select?: Record<string, any>): Row | null;
 function project(row: Row | null, select?: Record<string, any>): Row | null {
     if (!row) return null;
     if (!select) return { ...row };

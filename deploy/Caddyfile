@@ -1,0 +1,39 @@
+{
+	email {$ACME_EMAIL}
+
+	servers {
+		# The two Next.js sites forward /api/* from Vercel, so the visitor's real address only exists in the
+		# X-Forwarded-For header Vercel sends. Vercel has no fixed addresses to trust, so Caddy keeps that header.
+		# The API reads the visitor from it (TRUST_PROXY_HOPS=2) and rate-limits per visitor.
+		# Trade-off: someone calling this server directly could invent that header. See docs/deployment.md.
+		trusted_proxies static 0.0.0.0/0 ::/0
+	}
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	# Nothing here takes more than a few KB; the biggest caller is SNS at 256 KB.
+	request_body {
+		max_size 1MB
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+	}
+
+	reverse_proxy api:4000 {
+		health_uri /api/v1/health
+		health_interval 15s
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 60s
+		}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

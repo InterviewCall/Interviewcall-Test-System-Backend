@@ -47,7 +47,9 @@ export class CandidateController {
 
     @Post('session')
     @HttpCode(HttpStatus.OK)
-    @Throttle({ default: { limit: 10, ttl: 60_000 } })
+    // The secret in the link is long and random, so guessing is hopeless. The limit is per IP and a whole class
+    // opens its links in the same minute from one router, so it has to allow that.
+    @Throttle({ default: { limit: 60, ttl: 60_000 } })
     @ApiOperation({
         summary: 'Open the test link: swap the secret from the email plus the candidate’s email for a session cookie',
         description: 'Works until the slot ends. After that, or once the test has expired, an advisor or admin has to reschedule it to send a new link.',
@@ -103,7 +105,6 @@ export class CandidateController {
 
     @Put('attempt/answers/:questionVersionId')
     @UseGuards(CandidateGuard)
-    @Throttle({ default: { limit: 120, ttl: 60_000 } })
     @ApiOperation({ summary: 'Save the chosen option for one question. Send optionId null to clear it.' })
     @ApiZodBody(saveAnswerSchema)
     saveAnswer(

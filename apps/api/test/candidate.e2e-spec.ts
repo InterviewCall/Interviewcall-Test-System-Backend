@@ -128,7 +128,9 @@ describe.skipIf(!enabled)('candidate flow (real database)', () => {
         return new Map(rows.map((r) => [r.questionVersionId, r.id]));
     }
 
-    function questionsOf(attempt: { sections: { questions: { questionVersionId: number; options: { id: number }[] }[] }[] }) {
+    function questionsOf(attempt: {
+        sections: { questions: { questionVersionId: number; selectedOptionId?: number | null; options: { id: number }[] }[] }[];
+    }) {
         return attempt.sections.flatMap((s) => s.questions);
     }
 

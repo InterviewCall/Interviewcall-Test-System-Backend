@@ -1,0 +1,95 @@
+name: CI
+
+# Runs on every pull request, and the deploy workflow calls it before building anything.
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, type-check, test, build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    services:
+      # The same database engine and version as production, so a migration that works here works there.
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: ci-root-password
+          MARIADB_DATABASE: entrance_test
+          MARIADB_USER: ci
+          MARIADB_PASSWORD: ci-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      DATABASE_URL: mysql://ci:ci-password@127.0.0.1:3306/entrance_test
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_USER: ci
+      DB_PASSWORD: ci-password
+      DB_NAME: entrance_test
+      REDIS_HOST: 127.0.0.1
+      # Throwaway value for tests only: 32 bytes, base64.
+      NOTIFICATIONS_PAYLOAD_KEY: Y2ktb25seS1wYXlsb2FkLWtleS0zMi1ieXRlcyEhISE=
+      # Turns on the end-to-end tests that use the real database.
+      REAL_DB_E2E: "true"
+      SEED_ADMIN_EMAIL: ci-admin@example.com
+      SEED_ADMIN_PASSWORD: ci-only-long-passphrase
+      SEED_ADMIN_FULL_NAME: CI Admin
+      SEED_ADMIN_PHONE: "+911234567890"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate the Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Apply every migration to an empty database
+        run: |
+          npx prisma migrate deploy
+          npx prisma migrate status
+
+      - name: Seed (first admin and the question bank)
+        run: npx tsx libs/model/prisma/seed.ts
+
+      - name: End-to-end tests (real database and real Redis)
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build

@@ -17,9 +17,11 @@ import { UsersModule } from './users/users.module.js';
     imports: [
         AppConfigModule,
         ModelModule,
-        // Per client IP. In memory, which is right for one API process; move the
-        // storage to Redis or the database if the API is ever scaled out.
-        ThrottlerModule.forRoot({ throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }] }),
+        // Per client IP, so TRUST_PROXY_HOPS must match the proxies in front of the API. In memory, which is
+        // right for one API process; move the storage to Redis if the API is ever scaled out. The ceiling is
+        // generous on purpose: a whole class sitting a test behind one college router shares one IP, and each
+        // answer they pick is a request. Login and the other sensitive routes set their own, much lower, limits.
+        ThrottlerModule.forRoot({ throttlers: [{ name: 'default', ttl: 60_000, limit: 1200 }] }),
         AuthModule,
         UsersModule,
         TestSchedulesModule,

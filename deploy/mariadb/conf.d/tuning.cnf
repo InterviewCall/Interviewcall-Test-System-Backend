@@ -1,0 +1,9 @@
+[mysqld]
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+# Times are stored in UTC; the apps convert for display.
+default-time-zone = '+00:00'
+max_connections = 200
+skip-name-resolve
+# Safe on a crash: every committed transaction is on disk.
+innodb_flush_log_at_trx_commit = 1

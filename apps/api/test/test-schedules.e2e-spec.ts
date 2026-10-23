@@ -157,7 +157,7 @@ describe('test schedules', () => {
 
         describe('rejects a request that does not make sense', () => {
             const when = () => slot(60);
-            const post = async (body: unknown) => (await signIn(app, 'admin@example.com')).post(api('/test-schedules')).send(body);
+            const post = async (body: object) => (await signIn(app, 'admin@example.com')).post(api('/test-schedules')).send(body);
             const valid = () => ({ candidate: candidate(), level: 'INTERMEDIATE', startsAt: when().startsAt, endsAt: when().endsAt });
 
             it.each([

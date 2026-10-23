@@ -1,0 +1,150 @@
+# Everything the entrance-test backend needs on one EC2 server: API, worker, MariaDB, Redis and Caddy (HTTPS).
+# Lives in /opt/interviewcall-tests on the server, next to its .env. CI copies this file there on every deploy.
+# Day-to-day commands are in docs/deployment.md.
+name: interviewcall-tests
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+x-app: &app
+  image: ${REGISTRY_IMAGE}:${IMAGE_TAG}
+  restart: unless-stopped
+  init: true
+  logging: *logging
+  env_file: .env
+  environment: &app-environment
+    NODE_ENV: production
+    PORT: "4000"
+    DB_HOST: mariadb
+    DB_PORT: "3306"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    # Browser -> Vercel -> Caddy -> API is two hops, so the real visitor is the second address from the right.
+    TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-2}
+    # Only the database container needs this one.
+    DB_ROOT_PASSWORD: ""
+  depends_on:
+    mariadb:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_AUTO_UPGRADE: "1"
+    # Leave about a quarter of the server's memory to the buffer pool: 1G on 4 GB, 2G on 8 GB.
+    command: ["--innodb-buffer-pool-size=${DB_BUFFER_POOL:-1G}"]
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./mariadb/conf.d:/etc/mysql/conf.d:ro
+    # Only this machine can reach it, for backups and for an SSH tunnel when you need to look inside.
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    logging: *logging
+    # BullMQ needs noeviction: Redis must refuse writes when full rather than silently drop queued emails.
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-512mb}
+      - --maxmemory-policy
+      - noeviction
+      - --requirepass
+      - ${REDIS_PASSWORD}
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    <<: *app
+    expose:
+      - "4000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  worker:
+    <<: *app
+    command: ["node", "dist/apps/worker/main.js"]
+    # Lets a running job finish before the container is replaced.
+    stop_grace_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # One-off jobs, run by hand or by deploy.sh: they are not started with the rest.
+  migrate:
+    image: ${REGISTRY_IMAGE}:tools-${IMAGE_TAG}
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql://${DB_USER}:${DB_PASSWORD}@mariadb:3306/${DB_NAME}
+      DB_HOST: mariadb
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  seed:
+    image: ${REGISTRY_IMAGE}:tools-${IMAGE_TAG}
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql://${DB_USER}:${DB_PASSWORD}@mariadb:3306/${DB_NAME}
+      DB_HOST: mariadb
+    command: ["tsx", "libs/model/prisma/seed.ts"]
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

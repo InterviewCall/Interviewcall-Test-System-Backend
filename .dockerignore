@@ -1,0 +1,16 @@
+# Keep the build context small and keep secrets out of the image.
+node_modules
+dist
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+coverage
+dump.rdb
+docs
+deploy
+libs/model/src/generated
+.vscode
+.idea
