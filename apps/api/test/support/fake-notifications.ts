@@ -27,6 +27,10 @@ export class FakeNotificationsService {
         return Promise.resolve(true);
     }
 
+    testStartUrl(inviteToken: string): string {
+        return `https://test.example.com/t/${encodeURIComponent(inviteToken)}`;
+    }
+
     sendWhatsApp(): Promise<boolean> {
         return Promise.resolve(this.queueIsUp);
     }

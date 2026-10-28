@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { formatWindow } from '../utils/datetime.js';
+import { testStartUrl } from '../utils/start-url.js';
 import type { MailGlobals, MailSender, MailTemplateId } from '../types/mail.types.js';
 
 interface MailTemplate<S extends z.ZodType> {
@@ -99,7 +100,7 @@ const candidateTestScheduled = defineMailTemplate({
         firstName: data.fullName.trim().split(/\s+/)[0],
         durationMinutes: data.durationMinutes,
         scheduledAt: formatWindow(new Date(data.startsAt), new Date(data.endsAt)),
-        startUrl: `${globals.testPortalUrl}/t/${encodeURIComponent(data.inviteToken)}`,
+        startUrl: testStartUrl(globals.testPortalUrl, data.inviteToken),
         preheader: `Your assessment takes about ${data.durationMinutes} minutes.`,
         footerNote: `Sent by ${globals.appName} because our team scheduled an assessment for this email address.`,
     }),
@@ -114,7 +115,7 @@ const candidateTestRescheduled = defineMailTemplate({
         firstName: data.fullName.trim().split(/\s+/)[0],
         durationMinutes: data.durationMinutes,
         scheduledAt: formatWindow(new Date(data.startsAt), new Date(data.endsAt)),
-        startUrl: `${globals.testPortalUrl}/t/${encodeURIComponent(data.inviteToken)}`,
+        startUrl: testStartUrl(globals.testPortalUrl, data.inviteToken),
         preheader: 'Your assessment has moved. Here is your new time.',
         footerNote: `Sent by ${globals.appName} because our team rescheduled an assessment for this email address.`,
     }),

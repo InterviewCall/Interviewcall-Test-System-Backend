@@ -401,6 +401,25 @@ describe.skipIf(!enabled)('candidate flow (real database)', () => {
             expect(early.body.code).toBe('NOT_OPEN_YET');
         });
 
+        it('makes a link copied from the console the only working one, ending the browser that had the old link', async () => {
+            const { email, token, scheduleId } = await book();
+            const old = await signInCandidate(token, email);
+            expect(old.res.status).toBe(200);
+
+            const res = await staff.post(`/api/v1/test-schedules/${scheduleId}/new-link`).set('Origin', ORIGIN);
+            expect(res.status).toBe(200);
+            const fresh = decodeURIComponent((res.body.url as string).split('/t/')[1]);
+            expect(fresh).not.toBe(token);
+
+            // Nothing was emailed, the old link and the browser signed in with it are finished, and the new link works.
+            expect(fakeNotifications.testScheduledEmails.filter((m) => m.email === email)).toHaveLength(1);
+            expect((await signInCandidate(token, email)).res.status).toBe(401);
+            expect((await old.agent.get(api('/candidate/test'))).status).toBe(401);
+            const reopened = await signInCandidate(fresh, email);
+            expect(reopened.res.status).toBe(200);
+            expect((await reopened.agent.get(api('/candidate/test'))).body.state).toBe('READY');
+        });
+
         it('makes a resent invitation the only working link', async () => {
             const { email, token, scheduleId } = await book();
             const res = await staff.post(`/api/v1/test-schedules/${scheduleId}/resend-email`).set('Origin', ORIGIN);

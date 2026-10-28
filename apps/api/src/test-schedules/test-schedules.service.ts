@@ -80,6 +80,26 @@ export class TestSchedulesService {
     }
 
     /**
+     * Makes a fresh start link and hands it back, for passing on another way when the email isn't reaching the
+     * candidate. Nothing is emailed and the link is not stored (only its hash is), so this is the one time it can
+     * be seen. The previous link stops working at once, whether it was in an email or copied from here earlier.
+     */
+    async issueNewLink(id: number, actor: AuthUser): Promise<{ url: string }> {
+        const schedule = await this.get(id, actor);
+        if (schedule.status !== TestStatus.INVITED) {
+            throw new ConflictException('This test has already been started, submitted or has expired');
+        }
+        this.assertCanStillStart(schedule.endsAt, schedule.durationMinutes);
+
+        const inviteToken = newSecretToken();
+        const replaced = await this.schedules.replaceLink(id, hashToken(inviteToken));
+        if (!replaced) throw new ConflictException('This test has already been started, submitted or has expired');
+        // The log never carries the link itself.
+        this.logger.log(`Test ${id}: new start link issued by user ${actor.id}`);
+        return { url: this.notifications.testStartUrl(inviteToken) };
+    }
+
+    /**
      * Moves a test to a new window and emails the candidate the new time. Allowed while the
      * candidate has not started: still invited (even if they missed the slot) or expired.
      * Once it is in progress or submitted there is nothing to move.

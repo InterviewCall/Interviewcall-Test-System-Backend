@@ -30,6 +30,9 @@ export class ModelService
             user: requireEnv('DB_USER'),
             password: requireEnv('DB_PASSWORD'),
             database: requireEnv('DB_NAME'),
+            // Only for a local MySQL 8 whose user signs in with caching_sha2_password over a plain connection.
+            // Left off by default, because it trusts the server's key without checking it (see .env.example).
+            allowPublicKeyRetrieval: process.env.DB_ALLOW_PUBLIC_KEY_RETRIEVAL === 'true',
             connectionLimit: 5,
             connectTimeout: 5000,
             idleTimeout: 300,

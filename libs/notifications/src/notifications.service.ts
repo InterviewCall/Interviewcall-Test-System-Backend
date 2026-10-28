@@ -13,6 +13,7 @@ import type {
 } from './types/notification.types.js';
 import type { NotificationsConfig } from './types/notifications-config.types.js';
 import { maskEmail, maskPhone, normalizePhone } from './utils/phone.js';
+import { testStartUrl } from './utils/start-url.js';
 
 const DEDUPE_KEY = /^[A-Za-z0-9_-]{1,100}$/;
 
@@ -74,6 +75,11 @@ export class NotificationsService {
             );
             return false;
         }
+    }
+
+    /** The full start link for a candidate's secret, the same address the invitation email carries. */
+    testStartUrl(inviteToken: string): string {
+        return testStartUrl(this.config.testPortalUrl, inviteToken);
     }
 
     /** Emails a candidate their test slot. The start link carries a secret, so it travels in the sealed part of the job. */

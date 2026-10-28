@@ -1,9 +1,11 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import request from 'supertest';
 import { UserRole } from '@app/prisma';
 import { api, buildApp, createFakeModel, seedStaff, signIn } from './support/harness.js';
 import type { FakeModel } from './support/harness.js';
 import { fakeNotifications } from './support/fake-notifications.js';
 import { ExpiryService } from '../../worker/src/expiry/expiry.service.js';
+import { hashToken } from '../src/candidate/invite-token.js';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -330,6 +332,82 @@ describe('test schedules', () => {
             const { id } = await bookAs('asha@example.com');
             const mia = await signIn(app, 'mia@example.com');
             await mia.post(api(`/test-schedules/${id}/resend-email`)).expect(200);
+        });
+    });
+
+    describe('getting a new link', () => {
+        async function bookAs(email: string) {
+            const agent = await signIn(app, email);
+            const when = slot();
+            const res = await agent
+                .post(api('/test-schedules'))
+                .send({ candidate: candidate({ email: `c-${Math.random().toString(36).slice(2)}@example.com` }), level: 'INTERMEDIATE', startsAt: when.startsAt, endsAt: when.endsAt })
+                .expect(201);
+            return { agent, id: res.body.schedule.id as number };
+        }
+
+        const tokenIn = (url: string) => decodeURIComponent(url.split('/t/')[1]);
+
+        it('returns a working link, replaces the emailed one, and sends nothing', async () => {
+            const { agent, id } = await bookAs('asha@example.com');
+            const emailed = fakeNotifications.testScheduledEmails[0].inviteToken;
+            const before = db._schedules.find((s) => s.id === id)!.inviteTokenHash;
+            expect(before).toBe(hashToken(emailed));
+
+            const res = await agent.post(api(`/test-schedules/${id}/new-link`)).expect(200);
+
+            expect(res.body.url).toMatch(/^https:\/\/test\.example\.com\/t\/[A-Za-z0-9_-]{43}$/);
+            expect(res.headers['cache-control']).toBe('no-store');
+            const fresh = tokenIn(res.body.url);
+            expect(fresh).not.toBe(emailed);
+            // The database now answers to the new secret and no longer to the emailed one; only hashes are kept.
+            expect(db._schedules.find((s) => s.id === id)!.inviteTokenHash).toBe(hashToken(fresh));
+            expect(JSON.stringify(db._schedules)).not.toContain(fresh);
+            expect(fakeNotifications.testScheduledEmails).toHaveLength(1); // only the original
+        });
+
+        it('gives a different link every time, each one replacing the last', async () => {
+            const { agent, id } = await bookAs('asha@example.com');
+            const first = tokenIn((await agent.post(api(`/test-schedules/${id}/new-link`)).expect(200)).body.url);
+            const second = tokenIn((await agent.post(api(`/test-schedules/${id}/new-link`)).expect(200)).body.url);
+            expect(second).not.toBe(first);
+            expect(db._schedules.find((s) => s.id === id)!.inviteTokenHash).toBe(hashToken(second));
+        });
+
+        it('refuses once the test has started, been submitted or expired, and leaves the link alone', async () => {
+            const { agent, id } = await bookAs('asha@example.com');
+            const row = db._schedules.find((s) => s.id === id)!;
+            const original = row.inviteTokenHash;
+            for (const status of ['IN_PROGRESS', 'SUBMITTED', 'EXPIRED']) {
+                row.status = status;
+                await agent.post(api(`/test-schedules/${id}/new-link`)).expect(409);
+            }
+            expect(row.inviteTokenHash).toBe(original);
+        });
+
+        it('refuses when the slot has gone, because the candidate could no longer start', async () => {
+            const { agent, id } = await bookAs('asha@example.com');
+            db._schedules.find((s) => s.id === id)!.endsAt = new Date(Date.now() - HOUR);
+            await agent.post(api(`/test-schedules/${id}/new-link`)).expect(409);
+        });
+
+        it("hides other advisors' tests, but not from an admin or a manager", async () => {
+            const { id } = await bookAs('asha@example.com');
+            const ben = await signIn(app, 'ben@example.com');
+            await ben.post(api(`/test-schedules/${id}/new-link`)).expect(404);
+
+            const admin = await signIn(app, 'admin@example.com');
+            await admin.post(api(`/test-schedules/${id}/new-link`)).expect(200);
+            await admin.post(api('/test-schedules/9999/new-link')).expect(404);
+            const mia = await signIn(app, 'mia@example.com');
+            await mia.post(api(`/test-schedules/${id}/new-link`)).expect(200);
+        });
+
+        it('keeps editors and signed-out visitors out', async () => {
+            const { id } = await bookAs('asha@example.com');
+            const eli = await signIn(app, 'eli@example.com');
+            await eli.post(api(`/test-schedules/${id}/new-link`)).expect(403);
+            await request(app.getHttpServer()).post(api(`/test-schedules/${id}/new-link`)).expect(401);
         });
     });
 

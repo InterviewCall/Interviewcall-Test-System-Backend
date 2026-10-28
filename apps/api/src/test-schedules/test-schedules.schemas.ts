@@ -124,6 +124,12 @@ export const scheduleResponseSchema = z.object({
 
 export const schedulePageResponseSchema = pageOf(scheduleResponseSchema);
 
+export const newLinkResponseSchema = z.object({
+    url: z
+        .string()
+        .describe('The candidate’s new start link. Shown only this once: only its hash is stored, and the previous link no longer works'),
+});
+
 export const scheduleWithEmailStatusResponseSchema = z.object({
     schedule: scheduleResponseSchema,
     emailQueued: z

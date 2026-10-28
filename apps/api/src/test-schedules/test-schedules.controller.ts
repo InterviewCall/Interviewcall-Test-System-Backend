@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@app/prisma';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
@@ -10,6 +10,7 @@ import { ZodValidationPipe } from '../common/zod/zod-validation.pipe.js';
 import { toScheduleResponse } from './test-schedule-response.js';
 import {
     listSchedulesQuerySchema,
+    newLinkResponseSchema,
     rescheduleTestSchema,
     schedulePageResponseSchema,
     scheduleResponseSchema,
@@ -77,6 +78,19 @@ export class TestSchedulesController {
     ): Promise<ScheduleWithEmailStatusResponse> {
         const { schedule, emailQueued } = await this.schedules.reschedule(id, dto, actor);
         return { schedule: toScheduleResponse(schedule), emailQueued };
+    }
+
+    @Post(':id/new-link')
+    @HttpCode(HttpStatus.OK)
+    @Header('Cache-Control', 'no-store')
+    @ApiOperation({
+        summary: 'Make a new start link and return it, without emailing it',
+        description:
+            'For passing the link on another way. The previous link stops working at once, and the new one is shown only in this response. Allowed while the test is still invited and can still be started; otherwise 409. Advisors can do this only for their own tests.',
+    })
+    @ApiZodResponse(200, newLinkResponseSchema)
+    issueNewLink(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: AuthUser): Promise<{ url: string }> {
+        return this.schedules.issueNewLink(id, actor);
     }
 
     @Post(':id/resend-email')

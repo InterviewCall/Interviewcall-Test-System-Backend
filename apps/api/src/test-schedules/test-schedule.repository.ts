@@ -114,6 +114,25 @@ export class TestScheduleRepository {
     }
 
     /**
+     * Swaps the secret in the candidate's start link without sending anything. The previous link stops
+     * working at once, and so does any browser already signed in with it. Done in one statement that also
+     * checks the test is still waiting to be started, so a test that began a moment earlier is never touched.
+     * Returns whether the secret was replaced.
+     */
+    async replaceLink(id: number, tokenHash: string): Promise<boolean> {
+        const { count } = await this.db.testSchedule.updateMany({
+            where: { id, status: TestStatus.INVITED },
+            data: { inviteTokenHash: tokenHash },
+        });
+        if (count === 0) return false;
+        await this.db.candidateSession.updateMany({
+            where: { testScheduleId: id, revokedAt: null },
+            data: { revokedAt: new Date() },
+        });
+        return true;
+    }
+
+    /**
      * Applies a delivery report from SES to the test whose email carried `mailRef`. It lands only when it
      * moves the email forward (see mail-delivery.ts), so reports may arrive in any order or twice.
      * Returns whether a test was updated.
